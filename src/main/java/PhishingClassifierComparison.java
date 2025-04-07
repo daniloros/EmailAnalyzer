@@ -1,4 +1,3 @@
-import model.MailData;
 import model.PhishingResult;
 import model.TrainingEmail;
 import rf_classifier.RFPhishingDetectionSystem;
@@ -27,15 +26,16 @@ public class PhishingClassifierComparison {
             toAnalyze.setText(testEmail);
 
 
+
             // Confrontiamo le predizioni
             System.out.println("Random Forest ...");
-            PhishingResult rfResult = rfSystem.analyzeEmail(testEmail);
+            PhishingResult rfResult = rfSystem.analyzeEmail(testEmail, null);
 
             System.out.println("SVM ....");
-            PhishingResult svmResult = svmSystem.analyzeEmail(testEmail);
+            PhishingResult svmResult = svmSystem.analyzeEmail(testEmail, null);
 
             System.out.println("XGBoost ....");
-            PhishingResult xgbResult = xgbSystem.analyzeEmail(testEmail);
+            PhishingResult xgbResult = xgbSystem.analyzeEmail(testEmail, null);
 
             System.out.println("=== Confronto Classificatori ===");
             System.out.println("Random Forest predice: " + (rfResult.isPhishing() ? "PHISHING" : "LEGITTIMA"));

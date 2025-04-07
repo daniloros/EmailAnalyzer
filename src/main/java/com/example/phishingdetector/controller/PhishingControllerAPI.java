@@ -34,7 +34,7 @@ public class PhishingControllerAPI {
     @PostMapping("/analyze/rf")
     public ResponseEntity<EmailResponse> analyzeWithRandomForest(@RequestBody EmailRequest request) {
         try {
-            PhishingResult result = detectionService.analyzeWithRandomForest(request.getText());
+            PhishingResult result = detectionService.analyzeWithRandomForest(request.getText(), request.getExtractedUrls());
             String key = "rf-" + System.currentTimeMillis();
             resultCache.put(key, result);
 
@@ -57,7 +57,7 @@ public class PhishingControllerAPI {
     @PostMapping("/analyze/svm")
     public ResponseEntity<EmailResponse> analyzeWithSVM(@RequestBody EmailRequest request) {
         try {
-            PhishingResult result = detectionService.analyzeWithSVM(request.getText());
+            PhishingResult result = detectionService.analyzeWithSVM(request.getText(), request.getExtractedUrls());
             String key = "svm-" + System.currentTimeMillis();
             resultCache.put(key, result);
 
@@ -80,7 +80,7 @@ public class PhishingControllerAPI {
     @PostMapping("/analyze/xgboost")
     public ResponseEntity<EmailResponse> analyzeWithXGBoost(@RequestBody EmailRequest request) {
         try {
-            PhishingResult result = detectionService.analyzeWithXGBoost(request.getText());
+            PhishingResult result = detectionService.analyzeWithXGBoost(request.getText(), request.getExtractedUrls());
             String key = "xgboost-" + System.currentTimeMillis();
             resultCache.put(key, result);
 
@@ -103,9 +103,9 @@ public class PhishingControllerAPI {
     @PostMapping("/analyze/compare")
     public ResponseEntity<ComparisonResponse> compareClassifiers(@RequestBody EmailRequest request) {
         try {
-            PhishingResult rfResult = detectionService.analyzeWithRandomForest(request.getText());
-            PhishingResult svmResult = detectionService.analyzeWithSVM(request.getText());
-            PhishingResult xgboostResult = detectionService.analyzeWithXGBoost(request.getText());
+            PhishingResult rfResult = detectionService.analyzeWithRandomForest(request.getText(), request.getExtractedUrls());
+            PhishingResult svmResult = detectionService.analyzeWithSVM(request.getText(), request.getExtractedUrls());
+            PhishingResult xgboostResult = detectionService.analyzeWithXGBoost(request.getText(), request.getExtractedUrls());
 
             // Salviamo i risultati nella cache
             String rfKey = "rf-" + System.currentTimeMillis();
@@ -164,14 +164,14 @@ public class PhishingControllerAPI {
                 String classifier = request.getClassifier().toLowerCase();
 
                 if (classifier.contains("rf") || classifier.contains("random")) {
-                    freshResult = detectionService.analyzeWithRandomForest(request.getEmailText());
+                    freshResult = detectionService.analyzeWithRandomForest(request.getEmailText(),null);
                 } else if (classifier.contains("svm")) {
-                    freshResult = detectionService.analyzeWithSVM(request.getEmailText());
+                    freshResult = detectionService.analyzeWithSVM(request.getEmailText(), null);
                 } else if (classifier.contains("xgboost")) {
-                    freshResult = detectionService.analyzeWithXGBoost(request.getEmailText());
+                    freshResult = detectionService.analyzeWithXGBoost(request.getEmailText(), null);
                 } else {
                     // Default a Random Forest se il classificatore non è specificato correttamente
-                    freshResult = detectionService.analyzeWithRandomForest(request.getEmailText());
+                    freshResult = detectionService.analyzeWithRandomForest(request.getEmailText(), null);
                 }
 
                 detectionService.saveFeedback(

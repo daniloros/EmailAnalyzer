@@ -25,7 +25,7 @@ public class RFPhishingDetectionSystem {
     /**
      * Analizza una singola email e determina se è phishing
      */
-    public PhishingResult analyzeEmail(String emailText) throws Exception {
+    public PhishingResult analyzeEmail(String emailText, List<String> extractedUrls) throws Exception {
         // Ottiene l'embedding da UmBERTO
         MailData mailData = new MailData();
         EmailFromBert emailFromBert = BERTEmbeddingClient.getEmbedding(emailText);
@@ -34,7 +34,7 @@ public class RFPhishingDetectionSystem {
         NaturalLanguage.extractNaturalLanguage(mailData, emailText);
 
         EmailLinkExtractor featureExtractor = new EmailLinkExtractor(emailText);
-        featureExtractor.extractLinkFeatures(mailData);
+        featureExtractor.extractLinkFeatures(mailData, extractedUrls);
 
         SpamDetectorFromJson spamDetectorFromJson = new SpamDetectorFromJson(emailText);
         spamDetectorFromJson.findSpamWord(mailData);
@@ -78,7 +78,7 @@ public class RFPhishingDetectionSystem {
                 mailData.setSentimentScore(email.getSentimentScore());
 
                 EmailLinkExtractor featureExtractor = new EmailLinkExtractor(email.getText());
-                featureExtractor.extractLinkFeatures(mailData);
+                featureExtractor.extractLinkFeatures(mailData, null);
 
                 SpamDetectorFromJson spamDetectorFromJson = new SpamDetectorFromJson(email.getText());
                 spamDetectorFromJson.findSpamWord(mailData);
@@ -185,7 +185,7 @@ public class RFPhishingDetectionSystem {
 
             // Esempio di analisi di una nuova email
             String emailText = "Inserisci un testo mail di prova ...";
-            PhishingResult result = system.analyzeEmail(emailText);
+            PhishingResult result = system.analyzeEmail(emailText, null);
 
             System.out.println("\nRisultato analisi:");
             System.out.println("Email: " + result.getEmailText());

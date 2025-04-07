@@ -267,12 +267,23 @@
             return;
         }
 
+        // Recupera gli URL dalla pagina se disponibili
+        const extractedUrls = [];
+        const urlsList = document.getElementById('urlsList');
+        if (urlsList) {
+            const linkElements = urlsList.querySelectorAll('li a');
+            linkElements.forEach(link => {
+                extractedUrls.push(link.textContent);
+            });
+        }
+
         // Ottieni il classificatore selezionato
         const classifier = document.querySelector('input[name="classifier"]:checked').value;
 
         // Prepara i dati per l'API
         const requestData = {
-            text: emailText
+            text: emailText,
+            extractedUrls: extractedUrls
         };
 
         const loadingSpinner = document.getElementById('loadingSpinner');
