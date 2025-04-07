@@ -155,6 +155,12 @@ public class RFPhishingClassifier {
         System.out.println(eval.toSummaryString());
         System.out.println("\n=== Matrice di confusione ===");
         System.out.println(eval.toMatrixString());
+
+        System.out.println("\n=== Metriche Dettagliate ===");
+        System.out.println("F-Measure: " + eval.weightedFMeasure());
+        System.out.println("ROC Area: " + eval.weightedAreaUnderROC());
+        System.out.println("Precision: " + eval.weightedPrecision());
+        System.out.println("Recall: " + eval.weightedRecall());
     }
 
     /**

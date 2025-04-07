@@ -29,7 +29,7 @@ public class SVMPhishingDetectionSystem {
     /**
      * Analizza una singola email utilizzando il classificatore SVM.
      */
-    public PhishingResult analyzeEmail(String emailText) throws Exception {
+    public PhishingResult analyzeEmail(String emailText, List<String> extractedUrls) throws Exception {
         MailData mailData = new MailData();
         EmailFromBert emailFromBert = BERTEmbeddingClient.getEmbedding(emailText);
         float[] embedding = emailFromBert.getEmbedding();
@@ -37,7 +37,7 @@ public class SVMPhishingDetectionSystem {
         NaturalLanguage.extractNaturalLanguage(mailData, emailText);
 
         EmailLinkExtractor featureExtractor = new EmailLinkExtractor(emailText);
-        featureExtractor.extractLinkFeatures(mailData);
+        featureExtractor.extractLinkFeatures(mailData, extractedUrls);
 
         SpamDetectorFromJson spamDetectorFromJson = new SpamDetectorFromJson(emailText);
         spamDetectorFromJson.findSpamWord(mailData);
@@ -79,7 +79,7 @@ public class SVMPhishingDetectionSystem {
 
 
                 EmailLinkExtractor featureExtractor = new EmailLinkExtractor(email.getText());
-                featureExtractor.extractLinkFeatures(mailData);
+                featureExtractor.extractLinkFeatures(mailData, null);
 
                 SpamDetectorFromJson spamDetectorFromJson = new SpamDetectorFromJson(email.getText());
                 spamDetectorFromJson.findSpamWord(mailData);

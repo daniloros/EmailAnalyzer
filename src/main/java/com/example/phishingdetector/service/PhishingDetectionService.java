@@ -71,25 +71,25 @@ public class PhishingDetectionService {
     /**
      * Analizza una email utilizzando il sistema Random Forest
      */
-    public PhishingResult analyzeWithRandomForest(String emailText) throws Exception {
+    public PhishingResult analyzeWithRandomForest(String emailText, List<String> extractedUrls) throws Exception {
         logger.debug("Analisi con Random Forest: {}", emailText);
-        return rfSystem.analyzeEmail(emailText);
+        return rfSystem.analyzeEmail(emailText, extractedUrls);
     }
 
     /**
      * Analizza una email utilizzando il sistema SVM
      */
-    public PhishingResult analyzeWithSVM(String emailText) throws Exception {
+    public PhishingResult analyzeWithSVM(String emailText, List<String> extractedUrls) throws Exception {
         logger.debug("Analisi con SVM: {}", emailText);
-        return svmSystem.analyzeEmail(emailText);
+        return svmSystem.analyzeEmail(emailText, extractedUrls);
     }
 
     /**
      * Analizza una email utilizzando il sistema XGBoost
      */
-    public PhishingResult analyzeWithXGBoost(String emailText) throws Exception {
+    public PhishingResult analyzeWithXGBoost(String emailText, List<String> extractedUrls) throws Exception {
         logger.debug("Analisi con XGBoost: {}", emailText);
-        return xgboostSystem.analyzeEmail(emailText);
+        return xgboostSystem.analyzeEmail(emailText, extractedUrls);
     }
 
     /**

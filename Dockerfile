@@ -40,7 +40,6 @@ ENV app.dataset.path=/app/dataset/processed
 ENV app.model.rf.path=/app/models/rf_model_test_new.model
 ENV app.model.svm.path=/app/models/svm_model_test.model
 ENV app.model.xgboost.path=/app/models/xgboost_model_test.model
-ENV app.bert.api.url=https://bert-api-696543982204.europe-west8.run.app/analyze
 ENV app.spam.words.it=/app/dataset/spamWords/it.json
 ENV app.spam.words.en=/app/dataset/spamWords/en.json
 

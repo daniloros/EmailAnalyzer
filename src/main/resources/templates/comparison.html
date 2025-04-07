@@ -249,9 +249,20 @@
             return;
         }
 
+        // Recupera gli URL dalla pagina se disponibili
+        const extractedUrls = [];
+        const urlsList = document.getElementById('urlsList');
+        if (urlsList) {
+            const linkElements = urlsList.querySelectorAll('li a');
+            linkElements.forEach(link => {
+                extractedUrls.push(link.textContent);
+            });
+        }
+
         // Prepara i dati per l'API
         const requestData = {
-            text: emailText
+            text: emailText,
+            extractedUrls: extractedUrls
         };
 
         // Mostra lo spinner di caricamento

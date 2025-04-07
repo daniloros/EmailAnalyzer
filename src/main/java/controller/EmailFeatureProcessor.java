@@ -63,7 +63,7 @@ public class EmailFeatureProcessor {
 
                 // Extract link features
                 EmailLinkExtractor featureExtractor = new EmailLinkExtractor(text);
-                featureExtractor.extractLinkFeatures(mailData);
+                featureExtractor.extractLinkFeatures(mailData, null);
 
                 // Extract spam words
                 SpamDetectorFromJson spamDetector = new SpamDetectorFromJson(text);

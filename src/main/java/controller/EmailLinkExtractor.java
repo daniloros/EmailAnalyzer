@@ -5,6 +5,7 @@ import model.MailData;
 import org.apache.commons.validator.routines.UrlValidator;
 
 import java.nio.charset.Charset;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -16,7 +17,14 @@ public class EmailLinkExtractor {
         this.emailText = emailText;
     }
 
-    public void extractLinkFeatures(MailData mailData) {
+    public void extractLinkFeatures(MailData mailData, List<String> preExtractedUrls) {
+        if (preExtractedUrls != null && !preExtractedUrls.isEmpty()) {
+            // Analizza gli URL pre-estratti
+            for (String url : preExtractedUrls) {
+                analyzeUrl(url, mailData);
+            }
+        }
+        //estrai il link dal testo
         findLinkInText(emailText, mailData);
     }
 
@@ -87,6 +95,24 @@ public class EmailLinkExtractor {
     // ritorna true se trova caratteri strani
     private static boolean containsNonASCIICharacters(String domain) {
         return !Charset.forName("US-ASCII").newEncoder().canEncode(domain);
+    }
+
+    private void analyzeUrl(String url, MailData mailData) {
+        if (isValidIP(url)) {
+            mailData.setContainsIpAsUrl(true);
+            return;
+        }
+
+        try {
+            if (isValidURL(url)) {
+                mailData.setLink(url);
+                if (containsNonASCIICharacters(url)) {
+                    mailData.setContainsNonAsciiChars(true);
+                }
+            }
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 
     public String getEmailText() {
