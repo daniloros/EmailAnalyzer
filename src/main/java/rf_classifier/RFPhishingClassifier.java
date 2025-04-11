@@ -14,29 +14,30 @@ import java.util.List;
 import java.util.Random;
 
 public class RFPhishingClassifier {
-    // Classificatore
+    // Classifier
     private Classifier classifier;
 
-    // La struttura del nostro dataset (definisce come sono organizzati i nostri dati)
+    // The structure of  dataset (defines how our data is organized)
     private Instances datasetStructure;
 
     public RFPhishingClassifier() {
-        // Random Forest: robusto e gestisce bene dati ad alta dimensionalità
+        // Random Forest: Robust and handles high-dimensional data well
         classifier = new RandomForest();
-        // Prepariamo la struttura che conterrà i nostri dati
+        //  prepare the structure that will contain our data
         setupDatasetStructure();
     }
 
     /**
-     * Configura la struttura del dataset che useremo.
-     * Questa struttura deve rispecchiare i nostri dati:
-     * - 768 attributi numerici (uno per ogni dimensione dell'embedding)
-     * - 1 attributo categorico (la classe: phishing o legittimo)
+     * Configures the structure of the dataset we will use.
+     * This structure must reflect our data:
+     * - 768 numerical attributes (one for each embedding dimension)
+     * - 1 categorical attribute (the class: phishing or legitimate)
      */
+
     private void setupDatasetStructure() {
         ArrayList<Attribute> attributes = new ArrayList<>();
 
-        // Creiamo 768 attributi numerici per l'embedding
+        // create 768 numeric attributes for the embedding
         for (int i = 0; i < 768; i++) {
             attributes.add(new Attribute("embedding_" + i));
         }
@@ -50,87 +51,89 @@ public class RFPhishingClassifier {
         attributes.add(new Attribute("sentiment_magnitude"));
 
 
-        // Creiamo l'attributo classe (phishing o legitimate)
+        // Create the class attribute (phishing or legitimate)
         ArrayList<String> classValues = new ArrayList<>();
         classValues.add("phishing");
         classValues.add("legitimate");
         attributes.add(new Attribute("class", classValues));
 
-        // Creiamo la struttura del dataset
+        //  create the dataset structure
         datasetStructure = new Instances("EmailDataset", attributes, 0);
-        // Indichiamo qual è l'attributo classe (l'ultimo)
+        // indicate what the class attribute is (the last one)
         datasetStructure.setClassIndex(datasetStructure.numAttributes() - 1);
     }
 
     /**
-     * Addestra il classificatore sui dati forniti.
-     * @param embeddings Lista degli embedding delle email
-     * @param labels Lista delle etichette (true per phishing, false per legittime)
+     * Trains the classifier on the provided data.
+     * @param embeddings List of email embeddings
+     * @param labels List of labels (true for phishing, false for legitimate)
      */
+
     public void train(List<float[]> embeddings, List<Boolean> labels) throws Exception {
-        // Verifichiamo che i dati siano coerenti
+        //check that the data is consistent
         if (embeddings.size() != labels.size()) {
             throw new IllegalArgumentException("Il numero di embedding e labels deve corrispondere");
         }
 
-        // Creiamo il dataset di training
+        // create the training dataset
         Instances trainingData = new Instances(datasetStructure);
 
-        // Per ogni email nel nostro dataset
+        // For each email in our dataset
         for (int i = 0; i < embeddings.size(); i++) {
             float[] embedding = embeddings.get(i);
             boolean isPhishing = labels.get(i);
 
-            // Creiamo un array con tutti i valori dell'istanza
-            // +1 per la classe di phishing
+            // Create an array with all the values ​​of the instance
+            // +1 for the phishing class
             double[] values = new double[embedding.length + 1 ];
 
-            // Copiamo l'embedding
+            //  copy the embedding
             for (int j = 0; j < embedding.length; j++) {
                 values[j] = embedding[j];
             }
 
-            // Aggiungiamo la classe (0 per phishing, 1 per legitimate)
+            // Add the class (0 for phishing, 1 for legitimate)
             values[embedding.length] = isPhishing ? 0.0 : 1.0;
 
-            // Creiamo l'istanza e la aggiungiamo al dataset
+            // Create the instance and add it to the dataset
             trainingData.add(new DenseInstance(1.0, values));
         }
 
-        // Addestriamo il classificatore
+        // train the classifier
         classifier.buildClassifier(trainingData);
     }
 
     /**
-     * Classifica un nuovo embedding come phishing o legittimo
-     * @param embedding L'embedding da classificare
-     * @return true se l'email è classificata come phishing, false se legittima
+     * Classifies a new embedding as phishing or legitimate
+     * @param embedding The embedding to classify
+     * @return true if the email is classified as phishing, false if legitimate
      */
     public boolean classify(float[] embedding) throws Exception {
-        // Creiamo un'istanza per il nuovo embedding
+        //  create an instance for the new embedding
         double[] values = new double[embedding.length];
 
-        // Copiamo l'embedding
+        //  copy the embedding
         for (int i = 0; i < embedding.length; i++) {
             values[i] = embedding[i];
         }
 
-        // Creiamo l'istanza
+        // create the instance
         Instance instance = new DenseInstance(1.0, values);
         instance.setDataset(datasetStructure);
 
-        // Classifichiamo l'istanza
+        //  classify the instance
         double prediction = classifier.classifyInstance(instance);
 
-        // Convertiamo la predizione in boolean
+        //  convert the prediction to boolean
         return prediction == 0.0; // 0.0 = phishing, 1.0 = legitimate
     }
 
     /**
-     * Valuta le performance del modello usando cross-validation
+     * Evaluates the model's performance using cross-validation
      */
+
     public void evaluate(List<float[]> embeddings, List<Boolean> labels) throws Exception {
-        // Creiamo il dataset completo
+        // Create the complete dataset
         Instances dataset = new Instances(datasetStructure);
 
         for (int i = 0; i < embeddings.size(); i++) {
@@ -146,14 +149,14 @@ public class RFPhishingClassifier {
             dataset.add(new DenseInstance(1.0, values));
         }
 
-        // Eseguiamo una 10-fold cross validation
+        //perform a 10-fold cross validation
         Evaluation eval = new Evaluation(dataset);
         eval.crossValidateModel(classifier, dataset, 10, new Random(1));
 
-        // Stampiamo i risultati
-        System.out.println("=== Risultati della validazione ===");
+        // Print the results
+        System.out.println("=== Validation results ===");
         System.out.println(eval.toSummaryString());
-        System.out.println("\n=== Matrice di confusione ===");
+        System.out.println("\n=== Confusion matrix===");
         System.out.println(eval.toMatrixString());
 
         System.out.println("\n=== Metriche Dettagliate ===");
@@ -164,14 +167,15 @@ public class RFPhishingClassifier {
     }
 
     /**
-     * Salva il modello addestrato su file
+     * Saves the trained model to a file
      */
+
     public void saveModel(String filepath) throws Exception {
         SerializationHelper.write(filepath, classifier);
     }
 
     /**
-     * Carica un modello precedentemente salvato
+     * Loads a previously saved model
      */
     public void loadModel(String filepath) throws Exception {
         classifier = (Classifier) SerializationHelper.read(filepath);

@@ -44,15 +44,15 @@ public class EmailUploadController {
                 return "upload-form";
             }
 
-            // Estrai il contenuto dell'email
+            // Extract Email Content
             Map<String, Object> parsedContent = emailParserService.parseEmlFile(file);
 
-            // Salva i dati nella sessione
+            // Save session data
             session.setAttribute("emailContent", parsedContent.get("text"));
             session.setAttribute("emailSubject", parsedContent.get("subject"));
             session.setAttribute("urls", parsedContent.get("urls"));
 
-            // Passa anche al model per la vista attuale
+            // Pass to model
             model.addAttribute("emailContent", parsedContent.get("text"));
             model.addAttribute("emailSubject", parsedContent.get("subject"));
             model.addAttribute("urls", parsedContent.get("urls"));
@@ -60,8 +60,8 @@ public class EmailUploadController {
 
             return "email-content";
         } catch (Exception e) {
-            logger.error("Errore nell'elaborazione del file email", e);
-            model.addAttribute("error", "Errore nell'elaborazione del file: " + e.getMessage());
+            logger.error("Elaboration email file error", e);
+            model.addAttribute("error", "Elaboration email file error" + e.getMessage());
             return "upload-form";
         }
     }

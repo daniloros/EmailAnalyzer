@@ -24,40 +24,40 @@ import java.util.regex.Pattern;
 public class EmailParserService {
     private static final Logger logger = LoggerFactory.getLogger(EmailParserService.class);
 
-    // Pattern per trovare URL in testo semplice
+    // Pattern to find URLs in plain text
     private static final Pattern URL_PATTERN = Pattern.compile(
             "(https?://|www\\.)([-a-zA-Z0-9@:%._\\+~#=]{1,256}\\.[a-zA-Z0-9()]{1,6})\\b[-a-zA-Z0-9()@:%_+.~#?&/=\\-]*"
     );
 
     /**
-     * Estrae il contenuto testuale da un file .eml e gli URL trovati
+     * Extracts the textual content from a .eml file and the URLs found
      */
     public Map<String, Object> parseEmlFile(MultipartFile file) throws MessagingException, IOException {
-        logger.info("Parsing del file .eml: {}", file.getOriginalFilename());
+        logger.info("Parsing the .eml file: {}", file.getOriginalFilename());
 
-        // Crea una sessione vuota per il parsing
+        // Create an empty session for parsing
         Session session = Session.getDefaultInstance(new Properties(), null);
 
         try (InputStream inputStream = file.getInputStream()) {
-            // Crea un MimeMessage dal file
+            //Create a MimeMessage from the file
             MimeMessage message = new MimeMessage(session, inputStream);
 
-            // Estrai il subject
+            // Extract the subject
             String subject = message.getSubject() != null ? message.getSubject() : "NO SUBJECT";
 
-            // Estrai gli header
+            // Extract the headers
             Enumeration<String> headerLines = message.getAllHeaderLines();
             List<String> headers = new ArrayList<>();
             while (headerLines.hasMoreElements()) {
                 headers.add(headerLines.nextElement());
             }
 
-            // Inizializza variabili per memorizzare i contenuti
+            // Initialize variables to store contents
             String textContent = "";
             String htmlContent = "";
             List<String> extractedUrls = new ArrayList<>();
 
-            // Controlla il tipo di contenuto e gestiscilo di conseguenza
+            // Check the content type and manage it accordingly
             if (message.isMimeType("text/plain")) {
                 textContent = (String) message.getContent();
                 extractedUrls.addAll(extractUrlsFromText(textContent));
@@ -80,25 +80,25 @@ public class EmailParserService {
                     }
                 }
 
-                // Se abbiamo solo contenuto HTML, estraiamo il testo
+                // If only have HTML content, we extract the text
                 if (textContent.isEmpty() && !htmlContent.isEmpty()) {
                     textContent = Jsoup.parse(htmlContent).text();
                 }
             }
 
-            // Preprocessa il contenuto per rimuovere spazi e newline duplicati
+            // Preprocess content to remove duplicate spaces and newlines
             textContent = textContent.replaceAll("\\s{2,}", " ").replaceAll("\\n{2,}", "\n").trim();
 
-            // Gestisci la codifica quoted-printable se necessario
+            // Handle quoted-printable encoding if needed
             if (textContent.contains("Content-Transfer-Encoding: quoted-printable")) {
-                logger.debug("Rilevato contenuto quoted-printable, decodifica in corso...");
+                logger.debug("Quoted-printable content detected, decoding...");
                 textContent = decodeQuotedPrintable(textContent);
             }
 
-            // Rimuovi duplicati dalla lista di URL
+            // Remove duplicates from URL list
             List<String> uniqueUrls = new ArrayList<>(new LinkedHashSet<>(extractedUrls));
 
-            // Crea la mappa di risposta
+            // Create the response map
             Map<String, Object> result = new HashMap<>();
             result.put("text", textContent);
             result.put("subject", subject);
@@ -109,14 +109,14 @@ public class EmailParserService {
     }
 
     /**
-     * Estrae gli URL da contenuto HTML usando Jsoup
+     * Extracts URLs from HTML content using Jsoup
      */
     private List<String> extractUrlsFromHtml(String htmlContent) {
         List<String> urls = new ArrayList<>();
 
         Document doc = Jsoup.parse(htmlContent);
 
-        // Estrai URL da tag a
+        // Extract URLs from tags <a>
         Elements links = doc.select("a[href]");
         for (Element link : links) {
             String url = link.attr("href");
@@ -125,7 +125,7 @@ public class EmailParserService {
             }
         }
 
-        // Estrai URL da tag img
+        // Extract URL from <img> tag
         Elements images = doc.select("img[src]");
         for (Element img : images) {
             String url = img.attr("src");
@@ -134,7 +134,7 @@ public class EmailParserService {
             }
         }
 
-        // Cerca URL nel testo di tutti gli elementi
+        // Search URLs in the text of all items
         String textContent = doc.text();
         urls.addAll(extractUrlsFromText(textContent));
 
@@ -142,8 +142,9 @@ public class EmailParserService {
     }
 
     /**
-     * Estrae gli URL da testo semplice usando regex
+     * Extracts URLs from plain text using regex
      */
+
     public List<String> extractUrlsFromText(String text) {
         List<String> urls = new ArrayList<>();
 
@@ -156,27 +157,28 @@ public class EmailParserService {
     }
 
     /**
-     * Verifica se una stringa è un URL valido
+     * Checks if a string is a valid URL
      */
+
     private boolean isValidUrl(String url) {
         if (url == null || url.isEmpty()) {
             return false;
         }
 
-        // Ignora ancore interne e javascript
+        // Ignore internal anchors and javascript
         if (url.startsWith("#") || url.startsWith("javascript:")) {
             return false;
         }
 
-        // Accetta URL http/https o che iniziano con www.
+        // Accepts http/https or URLs starting with www.
         return url.startsWith("http://") || url.startsWith("https://") || url.startsWith("www.");
     }
 
     /**
-     * Decodifica testo in formato quoted-printable
+     * Decodes text in quoted-printable format
      */
     private String decodeQuotedPrintable(String text) {
-        // Implementazione semplificata della decodifica quoted-printable
+        // Simplified implementation of quoted-printable decoding
         return text.replaceAll("=[0-9A-F]{2}", " ");
     }
 }

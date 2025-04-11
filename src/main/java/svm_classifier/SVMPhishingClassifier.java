@@ -18,28 +18,28 @@ public class SVMPhishingClassifier {
     private Instances datasetStructure;
 
     public SVMPhishingClassifier() {
-        // Inizializziamo l'SVM
+        //Initiliaze SVM
         classifier = new SMO();
 
         try {
-            // Configuriamo il kernel RBF (Radial Basis Function)
+            // configure the RBF (Radial Basis Function) kernel
             RBFKernel rbf = new RBFKernel();
 
-            // Settiamo gamma - un parametro chiave per il kernel RBF
-            // Un valore più basso di gamma crea un confine di decisione più smooth
+            // Set gamma - a key parameter for the RBF kernel
+            // A lower gamma value creates a smoother decision boundary
             rbf.setGamma(0.01);
             classifier.setKernel(rbf);
 
-            // Configuriamo i parametri di SMO
-            // C è il parametro di regolarizzazione - bilancia l'errore di training
-            // e la complessità del modello
+            //Configure the SMO parameters
+            // C is the regularization parameter - it balances the training error
+            // and the model complexity
             classifier.setC(1.0);
 
-            // Utilizziamo la calibrazione di Platt per ottenere stime di probabilità
+            //  Platt's calibration to obtain probability estimates
             classifier.setOptions(weka.core.Utils.splitOptions("-M"));
 
         } catch (Exception e) {
-            System.err.println("Errore nella configurazione SVM: " + e.getMessage());
+            System.err.println("SVM configuration error: " + e.getMessage());
         }
 
         setupDatasetStructure();
@@ -48,7 +48,7 @@ public class SVMPhishingClassifier {
     private void setupDatasetStructure() {
         ArrayList<Attribute> attributes = new ArrayList<>();
 
-        // 768 attributi per l'embedding BERT
+        // 768 attributes for BERT embedding
         for (int i = 0; i < 768; i++) {
             attributes.add(new Attribute("embedding_" + i));
         }
@@ -61,7 +61,7 @@ public class SVMPhishingClassifier {
         attributes.add(new Attribute("sentiment_score"));
         attributes.add(new Attribute("sentiment_magnitude"));
 
-        // Attributo classe (phishing o legitimate)
+        // Class attribute (phishing or legitimate)
         ArrayList<String> classValues = new ArrayList<>();
         classValues.add("phishing");
         classValues.add("legitimate");
@@ -73,36 +73,36 @@ public class SVMPhishingClassifier {
 
     public void train(List<float[]> embeddings, List<Boolean> labels) throws Exception {
         if (embeddings.size() != labels.size()) {
-            throw new IllegalArgumentException("Numero di embedding e labels non corrispondente");
+            throw new IllegalArgumentException("Number of embeddings and labels does not match");
         }
 
         Instances trainingData = new Instances(datasetStructure);
 
-        // Creiamo il dataset di training con pesi delle istanze
+        // Create the training dataset with instance weights
         for (int i = 0; i < embeddings.size(); i++) {
             float[] embedding = embeddings.get(i);
             boolean isPhishing = labels.get(i);
 
-            // Creiamo un array con tutti i valori dell'istanza
-            // Ora la dimensione è embedding.length + 1 per la classe
+            // Create an array with all the values ​​of the instance
+            // Size is embedding.length + 1 for the class
             double[] values = new double[embedding.length + 1];
 
-            // Copiamo l'embedding
+            // Copy the embedding
             for (int j = 0; j < embedding.length; j++) {
                 values[j] = embedding[j];
             }
 
-            // Aggiungiamo la classe (0 per phishing, 1 per legitimate)
+            // Add the class (0 for phishing, 1 for legitimate)
             values[embedding.length] = isPhishing ? 0.0 : 1.0;
 
-            // Creiamo l'istanza con peso
-            // Diamo più peso alle email in italiano (se necessario)
-            // TODO: CAPIRE COME USARE IL PESO PER LA LINGUA IN ITALIANO
+
+            // Create the instance with weight
+            // Give more weight to Italian emails (if necessary)
             Instance instance = new DenseInstance(1.0, values);
             trainingData.add(instance);
         }
 
-        // Addestriamo il classificatore
+        //  train the classifier
         classifier.buildClassifier(trainingData);
     }
 
@@ -116,7 +116,7 @@ public class SVMPhishingClassifier {
         Instance instance = new DenseInstance(1.0, values);
         instance.setDataset(datasetStructure);
 
-        // Classifichiamo l'istanza
+        // classify the instance
         double prediction = classifier.classifyInstance(instance);
         return prediction == 0.0; // 0.0 = phishing, 1.0 = legitimate
     }
@@ -138,18 +138,18 @@ public class SVMPhishingClassifier {
             dataset.add(new DenseInstance(1.0, values));
         }
 
-        // Eseguiamo la cross-validation
+        // perform cross-validation
         Evaluation eval = new Evaluation(dataset);
         eval.crossValidateModel(classifier, dataset, 10, new Random(1));
 
-        // Stampiamo i risultati dettagliati
-        System.out.println("=== Risultati Valutazione SVM ===");
+        // Print the detailed results
+        System.out.println("=== SVM Evaluation Results ===");
         System.out.println(eval.toSummaryString());
-        System.out.println("\n=== Matrice di Confusione ===");
+        System.out.println("\n=== Confusion Matrix ===");
         System.out.println(eval.toMatrixString());
 
-        // Metriche aggiuntive particolarmente utili per dataset sbilanciati
-        System.out.println("\n=== Metriche Dettagliate ===");
+        // Additional metrics that are particularly useful for unbalanced datasets
+        System.out.println("\n=== Detailed Metrics===");
         System.out.println("F-Measure: " + eval.weightedFMeasure());
         System.out.println("ROC Area: " + eval.weightedAreaUnderROC());
         System.out.println("Precision: " + eval.weightedPrecision());
@@ -157,14 +157,14 @@ public class SVMPhishingClassifier {
     }
 
     /**
-     * Salvo il modello
+     * Save the model
      */
     public void saveModel(String filepath) throws Exception {
         weka.core.SerializationHelper.write(filepath, classifier);
     }
 
     /**
-     * Carico il modello
+     * Load the model
      */
     public void loadModel(String filepath) throws Exception {
         classifier = (SMO) weka.core.SerializationHelper.read(filepath);

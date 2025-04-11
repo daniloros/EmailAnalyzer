@@ -46,83 +46,80 @@ public class PhishingDetectionService {
     @PostConstruct
     public void init() {
         try {
-            logger.info("Inizializzazione dei sistemi di rilevamento phishing...");
+            logger.info("Initialization of phishing detection systems...");
 
-            // Inizializza Random Forest
             rfSystem = new RFPhishingDetectionSystem(datasetPath);
             rfSystem.loadModel(rfModelPath);
-            logger.info("Sistema Random Forest inizializzato.");
+            logger.info("Initialized Random Forest System.");
 
-            // Inizializza SVM
             svmSystem = new SVMPhishingDetectionSystem(datasetPath);
             svmSystem.loadModel(svmModelPath);
-            logger.info("Sistema SVM inizializzato.");
+            logger.info("Initialized SVM System.");
 
-            // Inizializza XGBoost
             xgboostSystem = new XGBoostPhishingDetectionSystem(datasetPath);
             xgboostSystem.loadModel(xgboostModelPath);
-            logger.info("Sistema XGBoost inizializzato.");
+            logger.info("Initialized XGBoost System.");
 
         } catch (Exception e) {
-            logger.error("Errore durante l'inizializzazione dei sistemi di rilevamento phishing", e);
+            logger.error("Error initializing phishing detection systems", e);
         }
     }
 
     /**
-     * Analizza una email utilizzando il sistema Random Forest
+     * Analyzes an email using the Random Forest system
      */
     public PhishingResult analyzeWithRandomForest(String emailText, List<String> extractedUrls) throws Exception {
-        logger.debug("Analisi con Random Forest: {}", emailText);
+        logger.debug("Analysis with Random Forest: {}", emailText);
         return rfSystem.analyzeEmail(emailText, extractedUrls);
     }
 
     /**
-     * Analizza una email utilizzando il sistema SVM
+     * Analyzes an email using the SVM system
      */
     public PhishingResult analyzeWithSVM(String emailText, List<String> extractedUrls) throws Exception {
-        logger.debug("Analisi con SVM: {}", emailText);
+        logger.debug("Analysis with SVM: {}", emailText);
         return svmSystem.analyzeEmail(emailText, extractedUrls);
     }
 
     /**
-     * Analizza una email utilizzando il sistema XGBoost
+     * Analyzes an email using the XGBoost system
      */
     public PhishingResult analyzeWithXGBoost(String emailText, List<String> extractedUrls) throws Exception {
-        logger.debug("Analisi con XGBoost: {}", emailText);
+        logger.debug("Analysis with XGBoost: {}", emailText);
         return xgboostSystem.analyzeEmail(emailText, extractedUrls);
     }
 
     /**
-     * Salva il feedback dell'utente per qualsiasi classificatore
-     * Questo metodo unificato gestisce il salvataggio del feedback indipendentemente dal classificatore utilizzato
+     * Saves user feedback for any classifier
+     * This unified method handles saving feedback regardless of the classifier used
      *
-     * @param emailText Testo dell'email analizzata
-     * @param userFeedback Feedback dell'utente (true = phishing, false = legittima)
-     * @param embedding Embedding BERT dell'email
-     * @param numTokens Numero di token nell'email (come Integer invece di int)
-     * @param classifier Identificatore del classificatore utilizzato (rf, svm, xgboost)
+     * @param emailText Text of the analyzed email
+     * @param userFeedback User feedback (true = phishing, false = legitimate)
+     * @param embedding BERT embedding of the email
+     * @param numTokens Number of tokens in the email (as Integer instead of int)
+     * @param classifier Identifier of the classifier used (rf, svm, xgboost)
      */
     public void saveFeedback(String emailText, boolean userFeedback, float[] embedding, Integer numTokens, String classifier) throws Exception {
-        logger.info("Salvando feedback per classificatore: {}", classifier);
+        logger.info("Saving feedback for classifier: {}", classifier);
 
-        // Creiamo un oggetto feedback con tutti i dati necessari, incluso il classificatore
+        //  create a feedback object with all the necessary data, including the classifier
         ProcessedEmailForJSON feedback = new ProcessedEmailForJSON(
                 emailText,
                 userFeedback,
                 embedding,
                 numTokens,
                 new Date(),
-                classifier // Aggiungiamo il classificatore all'oggetto
+                classifier
         );
 
         // Salviamo il feedback in un file JSON unico
         saveFeedbackToJson(feedback, classifier);
 
-        logger.info("Feedback salvato con successo");
+        logger.info("Feedback saved successfullyo");
     }
 
     /**
-     * Salva il feedback in un unico file JSON, controllando per duplicati
+     * Saves the feedback in a single JSON file, checking for duplicates
      */
     private void saveFeedbackToJson(ProcessedEmailForJSON feedback, String classifier) throws IOException {
         ObjectMapper mapper = new ObjectMapper();
@@ -130,47 +127,47 @@ public class PhishingDetectionService {
         String fileName = "feedback_dataset.json";
 
         File feedbackFile = new File(datasetPath + "/" + fileName);
-        feedbackFile.getParentFile().mkdirs();// la directory deve esistere
+        feedbackFile.getParentFile().mkdirs();// The directory must exist
 
         List<ProcessedEmailForJSON> existingFeedback = new ArrayList<>();
 
-        //inizializzo il cloud storage
+        //The directory must exist
         Storage storage = StorageOptions.getDefaultInstance().getService();
         BlobId blobId = BlobId.of(bucketName, fileName);
-        // Controlla se il file esiste già nel bucket
+        // Check if the file already exists in the bucket
         Blob blob = storage.get(blobId);
         if (blob != null && blob.exists()) {
-            // Scarica il contenuto del file esistente
+            // Download the contents of the existing file
             byte[] content = blob.getContent();
             String jsonContent = new String(content, StandardCharsets.UTF_8);
 
-            // Deserializza il contenuto JSON esistente
+            //Deserialize existing JSON content
             existingFeedback = mapper.readValue(jsonContent,
                     mapper.getTypeFactory().constructCollectionType(List.class, ProcessedEmailForJSON.class));
         }
 
 
-        // Controllo per evitare duplicati
+        // Control to avoid duplicates
         boolean isDuplicate = false;
         for (ProcessedEmailForJSON existing : existingFeedback) {
             // Controlliamo se c'è un'email con testo identico, stesso feedback e stesso classificatore
             if (existing.getText().equals(feedback.getText()) && existing.isPhishing() == feedback.isPhishing()) {
-                logger.info("Feedback duplicato trovato per classificatore '{}', non verrà aggiunto", classifier);
+                logger.info("Duplicate feedback found for classifier '{}', will not be added", classifier);
                 isDuplicate = true;
                 break;
             }
         }
 
-        // Aggiungiamo il nuovo feedback solo se non è un duplicato
+        // only add the new feedback if it is not a duplicate
         if (!isDuplicate) {
             existingFeedback.add(feedback);
 
-            // Converti la lista aggiornata in JSON e carico sul cloud
+            //Convert the updated list to JSON and upload to the cloud
             String updatedJson = mapper.writeValueAsString(existingFeedback);
             BlobInfo blobInfo = BlobInfo.newBuilder(blobId).setContentType("application/json").build();
             storage.create(blobInfo, updatedJson.getBytes(StandardCharsets.UTF_8));
 
-            logger.debug("Feedback salvato nel file unificato su Cloud Storage: gs://{}/{}", bucketName, fileName);
+            logger.debug("Feedback saved in unified file on Cloud Storage: gs://{}/{}", bucketName, fileName);
         }
     }
 

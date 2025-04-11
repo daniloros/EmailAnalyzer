@@ -23,10 +23,10 @@
         <div class="collapse navbar-collapse" id="navbarNav">
             <ul class="navbar-nav">
                 <li class="nav-item">
-                    <a class="nav-link active" href="/analyzer">Analizza Mail</a>
+                    <a class="nav-link active" href="/analyzer">Analyze Mail</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="/comparison">Confronta Classificatori</a>
+                    <a class="nav-link" href="/comparison">Compare Classifiers</a>
                 </li>
             </ul>
         </div>
@@ -35,28 +35,28 @@
 
 <!-- Main content -->
 <div class="container mt-4">
-    <h1 class="mb-4">Analizza Email</h1>
+    <h1 class="mb-4">Analyze Email</h1>
 
-    <!-- Opzioni per l'analisi dell'email -->
+    <!-- Email Analysis Options -->
     <div class="card mb-4">
         <div class="card-header">
-            <h4>Scegli come analizzare l'email</h4>
+            <h4>Choose how to analyze the email</h4>
         </div>
         <div class="card-body">
-            <p>Seleziona una delle seguenti opzioni:</p>
+            <p>Select one of the following options:</p>
             <div class="d-flex gap-3 mb-4">
-                <a href="/upload?origin=analyzer" class="btn btn-primary">Carica file .eml</a>
-                <button class="btn btn-secondary" id="showManualInput" onclick="toggleManualInput()">Inserisci testo manualmente</button>
+                <a href="/upload?origin=analyzer" class="btn btn-primary">Upload .eml file</a>
+                <button class="btn btn-secondary" id="showManualInput" onclick="toggleManualInput()">Enter text manually</button>
             </div>
         </div>
     </div>
 
-    <!-- Sezione per visualizzare i dettagli dell'email (se disponibili) -->
+    <!-- Section to view email details (if available) -->
     <div id="emailDetailsSection" th:if="${emailContent != null and !emailContent.isEmpty()}">
-        <!-- URL trovati nell'email -->
+        <!-- URLs found in email -->
         <div class="card mb-4">
             <div class="card-header">
-                <h4>URL trovati nell'email</h4>
+                <h4>URLs found in email</h4>
             </div>
             <div class="card-body">
                 <div id="urlListDisplay">
@@ -68,23 +68,23 @@
                         </ul>
                     </div>
                     <div id="noUrlsFound" th:if="${urls == null or urls.isEmpty()}" class="alert alert-info">
-                        Nessun URL trovato in questa email.
+                        No URLs found in this email.
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Form di analisi dell'email (per input manuale) -->
+    <!-- Email Analysis Form (for manual input) -->
     <div id="manualInputSection">
         <div class="card mb-4">
             <div class="card-header">
-                <h4>Analisi Email</h4>
+                <h4>Email Analysis</h4>
             </div>
             <div class="card-body">
                 <form id="emailForm">
                     <div class="mb-3">
-                        <label for="emailText" class="form-label">Testo dell'email</label>
+                        <label for="emailText" class="form-label">Email text</label>
                         <textarea th:attr="disabled=${emailContent != null and !emailContent.isEmpty()}"
                                   class="form-control" id="emailText" rows="10" required th:text="${emailContent}"></textarea>
                     </div>
@@ -95,7 +95,7 @@
     <div class="card">
         <div class="card-body">
             <div class="mb-3">
-                <label class="form-label">Classificatore</label>
+                <label class="form-label">Classifier</label>
                 <div class="form-check">
                     <input class="form-check-input" type="radio" name="classifier" id="rf" value="rf" checked>
                     <label class="form-check-label" for="rf">Random Forest</label>
@@ -109,72 +109,72 @@
                     <label class="form-check-label" for="xgboost">XGBoost</label>
                 </div>
             </div>
-            <button type="submit" class="btn btn-primary" onclick="analyzeEmail(event)">Analizza</button>
+            <button type="submit" class="btn btn-primary" onclick="analyzeEmail(event)">Analyze</button>
             <div id="loadingSpinner" class="mt-3 text-center" style="display: none;">
                 <div class="spinner-border text-primary" role="status">
-                    <span class="visually-hidden">Analisi in corso...</span>
+                    <span class="visually-hidden">Analysis in progress...</span>
                 </div>
-                <p class="mt-2">Analisi mediante classificatore in corso ..</p>
+                <p class="mt-2">Analysis using classifier in progress ..</p>
             </div>
         </div>
     </div>
 
-    <!-- Risultati dell'analisi -->
+    <!-- Analysis results -->
     <div id="resultSection" style="display: none;">
         <div class="card mb-4">
             <div class="card-header d-flex justify-content-between align-items-center">
-                <h4>Risultato Analisi</h4>
+                <h4>Analysis Result</h4>
                 <span id="resultBadge" class="badge rounded-pill"></span>
             </div>
             <div class="card-body">
                 <div class="row">
                     <div class="col-md-6">
-                        <h5>Dettagli:</h5>
+                        <h5>Details:</h5>
                         <ul class="list-group mb-3">
                             <li class="list-group-item d-flex justify-content-between align-items-center">
-                                Classificatore
+                                Classifier
                                 <span id="classifierName"></span>
                             </li>
                             <li id="resultItem" class="list-group-item d-flex justify-content-between align-items-center">
-                                Risultato
+                                Result
                                 <span id="resultLabel" class="fw-bold"></span>
                             </li>
                         </ul>
                     </div>
                     <div class="col-md-6">
                         <h5>Feedback:</h5>
-                        <p>Questa previsione è corretta?</p>
+                        <p>This prediction is correct?</p>
                         <div class="d-flex">
-                            <button id="feedbackYes" class="btn btn-outline-success me-2">Sì</button>
+                            <button id="feedbackYes" class="btn btn-outline-success me-2">Yes</button>
                             <button id="feedbackNo" class="btn btn-outline-danger">No</button>
                         </div>
                         <div id="feedbackMessage" class="alert mt-3" style="display: none;"></div>
                     </div>
                 </div>
 
-                <!-- Pulsante per l'analisi Gemini -->
+                <!-- Gemini Analysis Button -->
                 <div class="mt-4 border-top pt-3">
-                    <h5>Analisi AI avanzata:</h5>
-                    <p>Richiedi un'analisi dettagliata dell'email utilizzando l'intelligenza artificiale</p>
+                    <h5>Advanced AI analytics:</h5>
+                    <p>Request detailed email analysis using artificial intelligencee</p>
                     <button id="geminiAnalyzeBtn" class="btn btn-outline-primary" onclick="requestGeminiAnalysis()">
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-stars" viewBox="0 0 16 16" style="margin-right: 5px;">
                             <path d="M7.657 6.247c.11-.33.576-.33.686 0l.645 1.937a2.89 2.89 0 0 0 1.829 1.828l1.936.645c.33.11.33.576 0 .686l-1.937.645a2.89 2.89 0 0 0-1.828 1.829l-.645 1.936a.361.361 0 0 1-.686 0l-.645-1.937a2.89 2.89 0 0 0-1.828-1.828l-1.937-.645a.361.361 0 0 1 0-.686l1.937-.645a2.89 2.89 0 0 0 1.828-1.828l.645-1.937zM3.794 1.148a.217.217 0 0 1 .412 0l.387 1.162c.173.518.579.924 1.097 1.097l1.162.387a.217.217 0 0 1 0 .412l-1.162.387A1.734 1.734 0 0 0 4.593 5.69l-.387 1.162a.217.217 0 0 1-.412 0L3.407 5.69A1.734 1.734 0 0 0 2.31 4.593l-1.162-.387a.217.217 0 0 1 0-.412l1.162-.387A1.734 1.734 0 0 0 3.407 2.31l.387-1.162zM10.863.099a.145.145 0 0 1 .274 0l.258.774c.115.346.386.617.732.732l.774.258a.145.145 0 0 1 0 .274l-.774.258a1.156 1.156 0 0 0-.732.732l-.258.774a.145.145 0 0 1-.274 0l-.258-.774a1.156 1.156 0 0 0-.732-.732L9.1 2.137a.145.145 0 0 1 0-.274l.774-.258c.346-.115.617-.386.732-.732L10.863.1z"/>
                         </svg>
-                        Analizza con AI
+                        Analyze with AI
                     </button>
                 </div>
 
-                <!-- Sezione per l'analisi di Gemini (mostrata dopo la richiesta) -->
+                <!-- Gemini Analysis Section (shown after request) -->
                 <div id="geminiAnalysisSection" style="display: none;" class="mt-3">
                     <div id="geminiLoadingIndicator" class="text-center p-3" style="display: none;">
                         <div class="spinner-border text-primary" role="status">
-                            <span class="visually-hidden">Elaborazione in corso...</span>
+                            <span class="visually-hidden">Processing in progress...</span>
                         </div>
-                        <p class="mt-2">Generazione analisi in corso...</p>
+                        <p class="mt-2">Generating analysis in progress.</p>
                     </div>
                     <div id="geminiAnalysisContent" class="card bg-light">
                         <div class="card-header">
-                            <h5 class="mb-0">Analisi AI</h5>
+                            <h5 class="mb-0">AI analysis</h5>
                         </div>
                         <div class="card-body">
                             <div id="geminiAnalysisText" class="text-pre-wrap"></div>
@@ -209,27 +209,27 @@
         initializeManualSection();
     });
 
-    // Funzione per visualizzare i risultati
+    // Function to display results
     function displayResults(data) {
-        // Mostra la sezione dei risultati
+        // Show results section
         const resultSection = document.getElementById('resultSection');
         resultSection.style.display = 'block';
 
-        // Nascondi la sezione di analisi Gemini
+        // Hide Gemini analysis section
         const geminiSection = document.getElementById('geminiAnalysisSection');
         geminiSection.style.display = 'none';
 
-        // Aggiorna il badge del risultato
+        // Update the achievement badge
         const resultBadge = document.getElementById('resultBadge');
         if (data.phishing) {
             resultBadge.textContent = 'PHISHING';
             resultBadge.className = 'badge rounded-pill bg-danger';
         } else {
-            resultBadge.textContent = 'LEGITTIMA';
+            resultBadge.textContent = 'LEGIT';
             resultBadge.className = 'badge rounded-pill bg-success';
         }
 
-        // Aggiorna i dettagli
+        // Update details
         document.getElementById('classifierName').textContent = data.classifier;
 
         const resultItem = document.getElementById('resultItem');
@@ -245,10 +245,10 @@
             resultItem.classList.remove('list-group-item-danger');
         }
 
-        // Configura i pulsanti di feedback
+        // Configure feedback buttons
         setupFeedbackButtons(data);
 
-        // Memorizza i dati di classificazione come attributi del pulsante Gemini per un facile accesso
+        // Store classification data as Gemini button attributes for easy access
         const geminiBtn = document.getElementById('geminiAnalyzeBtn');
         console.log("Data:", data)
         geminiBtn.dataset.emailText = data.text;
@@ -263,7 +263,7 @@
 
         const emailText = document.getElementById('emailText').value;
         if (!emailText) {
-            alert('Inserisci il testo dell\'email');
+            alert('Enter the email text');
             return;
         }
 
@@ -277,7 +277,7 @@
             });
         }
 
-        // Ottieni il classificatore selezionato
+        // Get the selected classifier
         const classifier = document.querySelector('input[name="classifier"]:checked').value;
 
         // Prepara i dati per l'API
@@ -291,7 +291,7 @@
 
         loadingSpinner.scrollIntoView({ behavior: 'smooth' });
 
-        // Effettua la richiesta all'API
+        // Make the request to the API
         fetch(`/api/analyze/${classifier}`, {
             method: 'POST',
             headers: {
@@ -301,57 +301,57 @@
         })
             .then(response => {
                 if (!response.ok) {
-                    throw new Error('Errore durante l\'analisi');
+                    throw new Error('Error while parsing');
                 }
                 return response.json();
             })
             .then(data => {
-                // Visualizza i risultati
+                // View the results
                 displayResults(data);
                 loadingSpinner.style.display = 'none';
             })
             .catch(error => {
-                console.error('Errore:', error);
+                console.error('Error:', error);
                 loadingSpinner.style.display = 'none';
-                alert('Errore durante l\'analisi: ' + error.message);
+                alert('Error while parsing: ' + error.message);
             });
     }
 
-    // Configura i pulsanti di feedback
+    // Configure feedback buttons
     function setupFeedbackButtons(data) {
         const yesBtn = document.getElementById('feedbackYes');
         const noBtn = document.getElementById('feedbackNo');
         const feedbackMessage = document.getElementById('feedbackMessage');
 
-        // Ripristina lo stato dei pulsanti
+        // Reset the state of the buttons
         yesBtn.disabled = false;
         noBtn.disabled = false;
         feedbackMessage.style.display = 'none';
 
-        // Aggiungi handler per il pulsante Sì (conferma la previsione)
+        // handler for Yes button (confirm prediction)
         yesBtn.onclick = function() {
             console.log("data phishing YES:", data.phishing);
             sendFeedback(data, data.phishing);
         };
 
-        // Aggiungi handler per il pulsante No (inverte la previsione)
+        //  handler for No button (reverses prediction)
         noBtn.onclick = function() {
             console.log("data phishing NO:", data.phishing);
             sendFeedback(data, !data.phishing);
         };
 
-        // Funzione per inviare il feedback
+        // Function to send feedback
         function sendFeedback(data, userFeedback) {
-            // Disabilita entrambi i pulsanti durante l'invio
+            // Disable both buttons when sending
             yesBtn.disabled = true;
             noBtn.disabled = true;
 
             // Mostra un indicatore di caricamento
             feedbackMessage.className = 'alert alert-info mt-3';
-            feedbackMessage.textContent = 'Invio feedback in corso...';
+            feedbackMessage.textContent = 'Sending feedback in progress...';
             feedbackMessage.style.display = 'block';
 
-            // Prepara i dati per l'API
+            // Prepare data for API
             const feedbackData = {
                 emailText: data.text,
                 userFeedback: userFeedback,
@@ -359,7 +359,7 @@
                 resultId: data.resultId
             };
 
-            // Effettua la richiesta all'API
+            // Make the request to the API
             fetch('/api/feedback', {
                 method: 'POST',
                 headers: {
@@ -369,30 +369,30 @@
             })
                 .then(response => {
                     if (!response.ok) {
-                        throw new Error('Errore durante l\'invio del feedback');
+                        throw new Error('Error sending feedback');
                     }
                     return response.json();
                 })
                 .then(response => {
-                    // Mostra il messaggio di successo
+                    // Show success message
                     feedbackMessage.className = 'alert alert-success mt-3';
-                    feedbackMessage.textContent = 'Grazie per il tuo feedback!';
+                    feedbackMessage.textContent = 'Thanks for your feedback!';
                 })
                 .catch(error => {
-                    console.error('Errore:', error);
+                    console.error('Error:', error);
 
-                    // Riabilita i pulsanti in caso di errore
+                    // Re-enable buttons on error
                     yesBtn.disabled = false;
                     noBtn.disabled = false;
 
-                    // Mostra il messaggio di errore
+                    // Show error message
                     feedbackMessage.className = 'alert alert-danger mt-3';
-                    feedbackMessage.textContent = 'Errore durante l\'invio del feedback: ' + error.message;
+                    feedbackMessage.textContent = 'Error sending feedback: ' + error.message;
                 });
         }
     }
 
-    // Funzione per richiedere l'analisi Gemini
+    // Function to request Gemini analysis
     function requestGeminiAnalysis() {
         const geminiBtn = document.getElementById('geminiAnalyzeBtn');
         const geminiSection = document.getElementById('geminiAnalysisSection');
@@ -400,18 +400,18 @@
         const geminiContent = document.getElementById('geminiAnalysisContent');
         const geminiText = document.getElementById('geminiAnalysisText');
 
-        // Ottieni i dati memorizzati nel pulsante
+        // Get the data stored in the button
         const emailText = geminiBtn.dataset.emailText;
         const classification = geminiBtn.dataset.classification === 'true';
         const classifier = geminiBtn.dataset.classifier;
         const resultId = geminiBtn.dataset.resultId;
 
         if (!emailText) {
-            alert('Nessun contenuto email disponibile da analizzare');
+            alert('No email content available to analyze');
             return;
         }
 
-        // Raccogli gli URL dal DOM se disponibili
+        // Get URLs from DOM if available
         const urls = [];
         const urlsList = document.getElementById('urlsList');
         if (urlsList) {
@@ -419,32 +419,32 @@
             linkElements.forEach(link => {
                 urls.push(link.textContent);
             });
-            console.log("Raccolti", urls.length, "URL dal DOM per l'analisi Gemini");
+            console.log("Collected", urls.length, "URL from DOM for Gemini analysis");
         } else {
-            console.log("Nessun URL trovato nel DOM, verranno estratti dal testo");
+            console.log("No URLs found in DOM, they will be extracted from text");
         }
 
-        // Disabilita il pulsante durante l'analisi
+        // Disable the button during parsing
         geminiBtn.disabled = true;
 
-        // Mostra la sezione di analisi con l'indicatore di caricamento
+        // Show the analysis section with the loading indicator
         geminiSection.style.display = 'block';
         geminiLoading.style.display = 'block';
         geminiContent.style.display = 'none';
 
-        // Scorri alla sezione di analisi
+        // Scroll to the analysis section
         geminiSection.scrollIntoView({ behavior: 'smooth' });
 
-        // Prepara i dati per l'API
+        // Prepare data for API
         const requestData = {
             emailText: emailText,
             classification: classification,
             classifier: classifier,
             resultId: resultId,
-            urls: urls // Includi gli URL raccolti dal DOM
+            urls: urls
         };
 
-        // Effettua la richiesta all'API Gemini
+        // Make the request to the Gemini API
         fetch('/api/gemini/analyze', {
             method: 'POST',
             headers: {
@@ -454,41 +454,41 @@
         })
             .then(response => {
                 if (!response.ok) {
-                    throw new Error('Errore durante l\'analisi con Gemini');
+                    throw new Error('Error while parsing with Gemini');
                 }
                 return response.json();
             })
             .then(response => {
-                // Nascondi l'indicatore di caricamento
+                // Hide loading indicator
                 geminiLoading.style.display = 'none';
 
-                // Mostra il contenuto dell'analisi
+                // Show the contents of the analysis
                 geminiContent.style.display = 'block';
 
-                // Formatta e visualizza l'analisi
+                // Format and display the analysis
                 if (response.status === 'success' && response.analysis) {
                     geminiText.innerHTML = response.analysis.replace(/\n/g, '<br>');
                 } else {
-                    geminiText.innerHTML = 'Non è stato possibile ottenere un\'analisi completa.';
+                    geminiText.innerHTML = 'It was not possible to obtain a complete analysis.';
                     if (response.message) {
-                        geminiText.innerHTML += '<br><br>Dettagli: ' + response.message;
+                        geminiText.innerHTML += '<br><br>Details: ' + response.message;
                     }
                 }
 
-                // Riabilita il pulsante
+                // Re-enable the button
                 geminiBtn.disabled = false;
             })
             .catch(error => {
-                console.error('Errore:', error);
+                console.error('Error:', error);
 
-                // Nascondi l'indicatore di caricamento
+                // Hide loading indicator
                 geminiLoading.style.display = 'none';
 
-                // Mostra il messaggio di errore
+                // Show error message
                 geminiContent.style.display = 'block';
-                geminiText.innerHTML = 'Errore durante l\'analisi: ' + error.message;
+                geminiText.innerHTML = 'Errore while parsing: ' + error.message;
 
-                // Riabilita il pulsante
+                // Re-enable the button
                 geminiBtn.disabled = false;
             });
     }

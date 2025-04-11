@@ -38,49 +38,50 @@ public class GeminiService {
 
     @PostConstruct
     public void init() {
-        // Prova prima a leggere direttamente dalla variabile d'ambiente
+        // Try reading directly from the environment variable first
         String envApiKey = System.getenv("GEMINI_API_KEY");
 
-        // Se disponibile dalla variabile d'ambiente, usa quella
+        //If available from the environment variable, use that
         if (envApiKey != null && !envApiKey.isEmpty()) {
             this.apiKey = envApiKey;
-            logger.info("Utilizzando API key Gemini dalla variabile d'ambiente");
+            logger.info("Using Gemini API key from environment variable");
         }
-        // Altrimenti usa quella dalle proprietà Spring
+        // Otherwise use the one from the Spring properties
         else if (apiKeyFromProperties != null && !apiKeyFromProperties.isEmpty()) {
             this.apiKey = apiKeyFromProperties;
-            logger.info("Utilizzando API key Gemini dalle proprietà Spring");
+            logger.info("Using Gemini API Keys from Spring Properties");
         }
-        // Se non è disponibile, log di warning
+        // If not available, warning log
         else {
-            logger.warn("Nessuna API key Gemini trovata! Le richieste API falliranno");
+            logger.warn("No Gemini API key found! API requests will fail");
         }
     }
 
     /**
-     * Analizza i risultati della classificazione email insieme ai link trovati
+     * Analyzes the email classification results along with the links found
      *
-     * @param emailContent Contenuto dell'email analizzata
-     * @param urls Lista di URL trovati nell'email
-     * @param classification Risultato della classificazione (true = phishing, false = legittima)
-     * @param classifier Nome del classificatore usato (RF, SVM, XGBoost)
-     * @return CompletableFuture contenente l'analisi di Gemini come stringa
+     * @param emailContent Content of the analyzed email
+     * @param urls List of URLs found in the email
+     * @param classification Classification result (true = phishing, false = legitimate)
+     * @param classifier Name of the classifier used (RF, SVM, XGBoost)
+     * @return CompletableFuture containing the Gemini analysis as a string
      */
+
     public CompletableFuture<String> analyzeEmailWithGemini(String emailContent, List<String> urls,
                                                             boolean classification, String classifier, float[] embedding) {
         try {
             if (apiKey == null || apiKey.isEmpty()) {
                 CompletableFuture<String> future = new CompletableFuture<>();
-                future.complete("Errore: API key di Gemini non configurata");
+                future.complete("Error: Gemini API key not configureda");
                 return future;
             }
 
             String prompt = buildPrompt(emailContent, urls, classification, classifier, embedding);
 
-            logger.debug("PROMPT INVIATO A GEMINI:\n{}", prompt);
+            logger.debug("PROMPT SENT TO GEMINI:\n{}", prompt);
 
 
-            // Costruisce il payload JSON per l'API Gemini
+            //Builds JSON payload for Gemini API
             ObjectNode contentNode = objectMapper.createObjectNode();
             contentNode.put("role", "user");
             contentNode.put("parts", objectMapper.createArrayNode().add(
@@ -106,20 +107,20 @@ public class GeminiService {
                                 JsonNode responseJson = objectMapper.readTree(response.body());
                                 return extractGeminiResponse(responseJson);
                             } catch (Exception e) {
-                                logger.error("Errore durante il parsing della risposta di Gemini", e);
-                                return "Errore nell'elaborazione della risposta: " + e.getMessage();
+                                logger.error("Error parsing Gemini response", e);
+                                return "EError processing response: " + e.getMessage();
                             }
                         } else {
-                            logger.error("Errore nella chiamata a Gemini API: " + response.statusCode() + " - " + response.body());
-                            return "Errore nella chiamata a Gemini: " + response.statusCode();
+                            logger.error("Error calling Gemini API: " + response.statusCode() + " - " + response.body());
+                            return "Error calling Gemini: " + response.statusCode();
                         }
                     })
                     .exceptionally(ex -> {
-                        logger.error("Eccezione durante la chiamata a Gemini API", ex);
-                        return "Errore di connessione: " + ex.getMessage();
+                        logger.error("Exception while calling Gemini API", ex);
+                        return "Connection error: " + ex.getMessage();
                     });
         } catch (Exception e) {
-            logger.error("Errore nella preparazione della richiesta a Gemini", e);
+            logger.error("Error preparing request to Gemini", e);
             CompletableFuture<String> future = new CompletableFuture<>();
             future.completeExceptionally(e);
             return future;
@@ -127,47 +128,48 @@ public class GeminiService {
     }
 
     /**
-     * Costruisce il prompt da inviare a Gemini
+     * Builds the prompt to send to Gemini
      */
+
     private String buildPrompt(String emailContent, List<String> urls, boolean classification,
                               String classifier, float[] embedding) {
         StringBuilder prompt = new StringBuilder();
 
-        // Introduzione e contesto
-        prompt.append("Immagina di essere un esperto di sicurezza informatica che deve classificare una mail come phishing o legittima. ");
-        prompt.append("La mail è stata già classificata come ");
-        prompt.append(classification ? "PHISHING" : "LEGITTIMA");
-        prompt.append(" dal classificatore ").append(classifier).append(", ");
-        prompt.append("ma non devi farti influenzare da questa classificazione poiché il classificatore ha un margine d'errore.\n\n");
+        // Introduction and context
+        prompt.append("Imagine you are a cybersecurity expert who has to classify an email as phishing or legitimate.");
+        prompt.append("The email has already been classified as");
+        prompt.append(classification ? "PHISHING" : "LEGIT");
+        prompt.append(" from the ").append(classifier).append("classifier, ");
+        prompt.append("but you should not be influenced by this classification because the classifier has a margin of error.\n\n");
 
-        // Contenuto della mail
-        prompt.append("CONTENUTO DELLA MAIL:\n").append(emailContent).append("\n\n");
+        // Content of the Email
+        prompt.append("CONTENT OF THE EMAIL:\n").append(emailContent).append("\n\n");
 
-        // URL trovati
-        prompt.append("URL TROVATI NELLA MAIL:\n");
+        // URLs found
+        prompt.append("URLS FOUND IN THE EMAIL:\n");
         if (urls != null && !urls.isEmpty()) {
             for (String url : urls) {
                 prompt.append("- ").append(url).append("\n");
             }
         } else {
-            prompt.append("Nessun URL trovato.\n");
+            prompt.append("No URLs found.\n");
         }
         prompt.append("\n");
 
-        // Informazioni tecniche sugli embedding e feature
+        // Technical information about embeddings and features
         if (embedding != null && embedding.length > 0) {
-            prompt.append("INFORMAZIONI TECNICHE:\n");
-            prompt.append("La mail è stata analizzata con embedding BERT multilingual. ");
+            prompt.append("TECHNICAL INFORMATION:\n");
+            prompt.append("The email was analyzed with multilingual BERT embedding. ");
 
 
-            if (embedding.length >= 774) {  // 768 dall'embedding BERT + 6 feature aggiuntive
+            if (embedding.length >= 774) {  //768 from BERT embedding + 6 additional features
                 int embeddingSize = embedding.length - 6;
 
-                prompt.append("L'embedding è un vettore di ").append(embedding.length).append(" elementi. ");
-                prompt.append("I primi ").append(embeddingSize).append(" elementi sono i valori dell'embedding BERT, ");
-                prompt.append("mentre gli ultimi 6 elementi sono feature specifiche:\n\n");
+                prompt.append("The embedding is a vector of").append(embedding.length).append(" elements. ");
+                prompt.append("The first ").append(embeddingSize).append(" elements are the BERT embedding values, ");
+                prompt.append("while the last 6 elements are specific features:\n\n");
 
-                // Valori delle feature speciali
+                // Special feature values
                 float containsUrl = embedding[embeddingSize];
                 float containsIpUrl = embedding[embeddingSize + 1];
                 float containsNonAscii = embedding[embeddingSize + 2];
@@ -175,37 +177,38 @@ public class GeminiService {
                 float sentimentScore = embedding[embeddingSize + 4];
                 float sentimentMagnitude = embedding[embeddingSize + 5];
 
-                prompt.append("1. Presenza di URL: ").append(containsUrl > 0.5 ? "Sì" : "No").append(" (").append(String.format("%.2f", containsUrl)).append(")\n");
-                prompt.append("2. Presenza di URL con indirizzi IP: ").append(containsIpUrl > 0.5 ? "Sì" : "No").append(" (").append(String.format("%.2f", containsIpUrl)).append(")\n");
-                prompt.append("3. Presenza di URL con caratteri non ASCII: ").append(containsNonAscii > 0.5 ? "Sì" : "No").append(" (").append(String.format("%.2f", containsNonAscii)).append(")\n");
-                prompt.append("4. Presenza di parole tipiche dello spam: ").append(containsSpamWords > 0.5 ? "Sì" : "No").append(" (").append(String.format("%.2f", containsSpamWords)).append(")\n");
-                prompt.append("5. Sentiment score (API Natural Language): ").append(String.format("%.4f", sentimentScore));
-                prompt.append("6. Sentiment magnitude (API Natural Language): ").append(String.format("%.4f", sentimentMagnitude));
+                prompt.append("1. Presence of URLs: ").append(containsUrl > 0.5 ? "Yes" : "No").append(" (").append(String.format("%.2f", containsUrl)).append(")\n");
+                prompt.append("2. Presence of URLs with IP addresses:").append(containsIpUrl > 0.5 ? "Yes" : "No").append(" (").append(String.format("%.2f", containsIpUrl)).append(")\n");
+                prompt.append("3. Presence of URLs with non-ASCII characters: ").append(containsNonAscii > 0.5 ? "Yes" : "No").append(" (").append(String.format("%.2f", containsNonAscii)).append(")\n");
+                prompt.append("4. Presence of typical spam words:").append(containsSpamWords > 0.5 ? "Yes" : "No").append(" (").append(String.format("%.2f", containsSpamWords)).append(")\n");
+                prompt.append("5. Sentiment score (Natural Language API): ").append(String.format("%.4f", sentimentScore));
+                prompt.append("6. Sentiment magnitude (Natural Language API): ").append(String.format("%.4f", sentimentMagnitude));
             } else {
-                // Se per qualche motivo l'embedding non ha le feature attese
-                prompt.append("L'embedding ha una dimensione di ").append(embedding.length).append(" elementi.\n\n");
+                // If for some reason the embedding does not have the expected features
+                prompt.append("The embedding has a size of").append(embedding.length).append(" elements.\n\n");
             }
         }
 
-        // Richiesta di analisi
-        prompt.append("RICHIESTA:\n");
-        prompt.append("Fornisci un'analisi dettagliata di massimo 300 parole a questa email, considerando tutti gli elementi forniti. La tua analisi dovrebbe includere:\n");
-        prompt.append("1. Se concordi o meno con la classificazione iniziale e perché\n");
-        prompt.append("2. Elementi sospetti o indicatori di phishing presenti nel testo\n");
-        prompt.append("3. Analisi degli URL (se presenti): sono legittimi o sospetti?\n");
-        prompt.append("4. Considerazioni sulle feature tecniche estratte\n");
-        prompt.append("5. Conclusione finale: classifichi questa mail come PHISHING o LEGITTIMA?\n\n");
-        prompt.append("Rispondi in formato strutturato con titoli per ogni sezione della tua analisi. Mantieni l'analisi concisa ma completa.");
+        // Request for analysis
+        prompt.append("REQUEST:\n");
+        prompt.append("Provide a detailed analysis of up to 300 words to this email, considering all the elements provided. Your analysis should include:\n");
+        prompt.append("1. Whether or not you agree with the initial classification and why\n");
+        prompt.append("2. Suspicious elements or phishing indicators present in the text\n");
+        prompt.append("3. URL analysis (if any): are they legitimate or suspicious?\n");
+        prompt.append("4. Considerations on the extracted technical features\n");
+        prompt.append("5. Final conclusion: do you classify this email as PHISHING or LEGITIMATE?\n\n");
+        prompt.append("Respond in a structured format with headings for each section of your analysis. Keep the analysis concise but complete.");
 
         return prompt.toString();
     }
 
     /**
-     * Estrae il testo della risposta dal JSON restituito da Gemini
+     * Extracts the response text from the JSON returned by Gemini
      */
+
     private String extractGeminiResponse(JsonNode responseJson) {
         try {
-            // Naviga nel JSON per estrarre il testo della risposta
+            // Navigate through the JSON to extract the response text
             JsonNode candidates = responseJson.path("candidates");
             if (candidates.isArray() && candidates.size() > 0) {
                 JsonNode content = candidates.get(0).path("content");
@@ -214,10 +217,10 @@ public class GeminiService {
                     return parts.get(0).path("text").asText();
                 }
             }
-            return "Nessuna risposta generata da Gemini";
+            return "No response generated by Gemini";
         } catch (Exception e) {
-            logger.error("Errore durante l'estrazione della risposta di Gemini", e);
-            return "Errore nell'elaborazione della risposta: " + e.getMessage();
+            logger.error("Error extracting Gemini response", e);
+            return "Error processing response: " + e.getMessage();
         }
     }
 }

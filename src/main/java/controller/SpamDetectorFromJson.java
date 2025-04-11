@@ -26,11 +26,11 @@ public class SpamDetectorFromJson {
 
         String jsonFile = detectedLanguage.equals("it") ? SPAMWORDSITA : SPAMWORDSENG;
 
-        List<String> paroleChiave = loadKeywordsFromJson(jsonFile);
+        List<String> keyword = loadKeywordsFromJson(jsonFile);
 
         Trie.TrieBuilder trieBuilder = Trie.builder().ignoreCase().onlyWholeWords();
-        for (String parola : paroleChiave) {
-            trieBuilder.addKeyword(parola);
+        for (String word : keyword) {
+            trieBuilder.addKeyword(word);
         }
 
         Trie trie = trieBuilder.build();
@@ -45,7 +45,7 @@ public class SpamDetectorFromJson {
 
     private static boolean containsSpamWord(Trie trie, String emailText) {
         for (Emit match : trie.parseText(emailText)) {
-            return true; // Non appena troviamo una parola chiave, restituiamo true
+            return true; // As soon as we find a keyword, we return true
         }
         return false;
     }

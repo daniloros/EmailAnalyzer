@@ -16,47 +16,48 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class XGBoostPhishingClassifier {
-    // Il modello XGBoost
+    // The XGBoost model
     private Booster booster;
 
-    // Parametri per XGBoost
+    // Parameters for XGBoost
     private Map<String, Object> params;
 
-    // La struttura del nostro dataset (definisce come sono organizzati i nostri dati)
+    // The structure of our dataset (defines how our data is organized)
     private Instances datasetStructure;
 
     public XGBoostPhishingClassifier() {
-        // Inizializzazione parametri XGBoost
+        // Initialize XGBoost parameters
         params = new HashMap<>();
-        params.put("objective", "binary:logistic");  // classificazione binaria
-        params.put("eval_metric", "error");          // metrica di valutazione
-        params.put("eta", 0.1);                      // learning rate
-        params.put("max_depth", 6);                  // profondità massima albero
+        params.put("objective", "binary:logistic");  // binary classification
+        params.put("eval_metric", "error");          // evaluation metric
+        params.put("eta", 0.1);                     // learning rate
+        params.put("max_depth", 6);                 // maximum tree depth
         params.put("min_child_weight", 1);
         params.put("subsample", 0.8);
         params.put("colsample_bytree", 0.8);
-        params.put("seed", 42);                      // per riproducibilità
+        params.put("seed", 42);
 
-        // Prepariamo la struttura che conterrà i nostri dati
+        // prepare the structure that will contain our data
         setupDatasetStructure();
     }
 
     /**
-     * Configura la struttura del dataset che useremo.
-     * Questa struttura deve rispecchiare i nostri dati:
-     * - 768 attributi numerici (uno per ogni dimensione dell'embedding)
-     * - Attributi aggiuntivi (contains_url, contains_ip, ecc.)
-     * - 1 attributo categorico (la classe: phishing o legittimo)
+     * Configures the structure of the dataset we will use.
+     * This structure must reflect our data:
+     * - 768 numerical attributes (one for each embedding dimension)
+     * - Additional attributes (contains_url, contains_ip, etc.)
+     * - 1 categorical attribute (the class: phishing or legitimate)
      */
+
     private void setupDatasetStructure() {
         ArrayList<Attribute> attributes = new ArrayList<>();
 
-        // Creiamo 768 attributi numerici per l'embedding
+        // create 768 numeric attributes for the embedding
         for (int i = 0; i < 768; i++) {
             attributes.add(new Attribute("embedding_" + i));
         }
 
-        // Attributi aggiuntivi
+        // Additional attributes
         attributes.add(new Attribute("contains_url"));
         attributes.add(new Attribute("contains_ip"));
         attributes.add(new Attribute("contains_non_ascii"));
@@ -65,26 +66,28 @@ public class XGBoostPhishingClassifier {
         attributes.add(new Attribute("sentiment_score"));
         attributes.add(new Attribute("sentiment_magnitude"));
 
-        // Creiamo l'attributo classe (phishing o legitimate)
+        // Create the class attribute (phishing or legitimate)
         ArrayList<String> classValues = new ArrayList<>();
         classValues.add("phishing");
         classValues.add("legitimate");
         attributes.add(new Attribute("class", classValues));
 
-        // Creiamo la struttura del dataset
+        // create the dataset structure
         datasetStructure = new Instances("EmailDataset", attributes, 0);
         // Indichiamo qual è l'attributo classe (l'ultimo)
         datasetStructure.setClassIndex(datasetStructure.numAttributes() - 1);
     }
 
     /**
-     * Converte una lista di embedding e labels in una DMatrix per XGBoost
+     * Converts a list of embeddings and labels into a DMatrix for XGBoost
      */
+
     private DMatrix createDMatrix(List<float[]> embeddings, List<Boolean> labels) throws XGBoostError {
         int numRows = embeddings.size();
         int numCols = embeddings.get(0).length;
 
-        // Converte la matrice 2D in un array 1D (row-major)
+        // Converts the 2D matrix into a 1D array (row-major)
+
         float[] flatData = new float[numRows * numCols];
         float[] labelArray = new float[numRows];
 
@@ -102,61 +105,64 @@ public class XGBoostPhishingClassifier {
     }
 
     /**
-     * Addestra il classificatore sui dati forniti.
-     * @param embeddings Lista degli embedding delle email
-     * @param labels Lista delle etichette (true per phishing, false per legittime)
+     * Trains the classifier on the provided data.
+     * @param embeddings List of email embeddings
+     * @param labels List of labels (true for phishing, false for legitimate)
      */
+
     public void train(List<float[]> embeddings, List<Boolean> labels) throws Exception {
-        // Verifichiamo che i dati siano coerenti
+        //check that the data is consistent
         if (embeddings.size() != labels.size()) {
-            throw new IllegalArgumentException("Il numero di embedding e labels deve corrispondere");
+            throw new IllegalArgumentException("The number of embeddings and labels must match");
         }
 
-        // Convertiamo i dati nel formato richiesto da XGBoost
+        // Convert the data to the format required by XGBoost
         DMatrix trainMat = createDMatrix(embeddings, labels);
 
-        // Definiamo i watchlist per monitorare l'addestramento
+        //  define watchlists to monitor training
         Map<String, DMatrix> watches = new HashMap<>();
         watches.put("train", trainMat);
 
-        // Numero di round di boosting
+        // Number of boosting rounds
         int numRounds = 100;
 
-        // Addestriamo il modello
+        //  train the model
         booster = XGBoost.train(trainMat, params, numRounds, watches, null, null);
 
     }
 
     /**
-     * Classifica un nuovo embedding come phishing o legittimo
-     * @param embedding L'embedding da classificare
-     * @return true se l'email è classificata come phishing, false se legittima
+     * Classifies a new embedding as phishing or legitimate
+     * @param embedding The embedding to classify
+     * @return true if the email is classified as phishing, false if legitimate
      */
+
     public boolean classify(float[] embedding) throws Exception {
-        // Convertiamo l'embedding in formato 1D per la DMatrix
+        // convert the embedding to 1D format for the DMatrix
         DMatrix dTest = new DMatrix(embedding, 1, embedding.length);
 
-        // Facciamo la predizione
+        // make the prediction
         float[][] predictions = booster.predict(dTest);
 
-        // XGBoost restituisce la probabilità di appartenere alla classe positiva
+        // XGBoost returns the probability of belonging to the positive class
         float probability = predictions[0][0];
 
-        // Se la probabilità è > 0.5, classifichiamo come phishing
+        // If the probability is > 0.5, we classify it as phishing
         return probability > 0.5;
     }
 
     /**
-     * Valuta le performance del modello
+     * Evaluates the model's performance
      */
+
     public void evaluate(List<float[]> embeddings, List<Boolean> labels) throws Exception {
-        // Convertiamo i dati nel formato richiesto da XGBoost
+        // convert the data into the format required by XGBoost
         DMatrix evalMat = createDMatrix(embeddings, labels);
 
-        // Facciamo le predizioni
+        // make predictions
         float[][] predictions = booster.predict(evalMat);
 
-        // Calcoliamo le metriche manuali (accuracy, precision, recall, F1)
+        //  calculate manual metrics (accuracy, precision, recall, F1)
         int tp = 0, fp = 0, tn = 0, fn = 0;
 
         for (int i = 0; i < predictions.length; i++) {
@@ -169,21 +175,21 @@ public class XGBoostPhishingClassifier {
             else if (!predicted && actual) fn++;  // False Negative
         }
 
-        // Calcoliamo le metriche
+        // calculate the metrics
 
         double accuracy = (double)(tp + tn) / (tp + fp + tn + fn);
         double precision = tp == 0 ? 0 : (double)tp / (tp + fp);
         double recall = tp == 0 ? 0 : (double)tp / (tp + fn);
         double f1 = precision + recall == 0 ? 0 : 2 * precision * recall / (precision + recall);
 
-        // Stampiamo i risultati
-        System.out.println("=== Risultati della validazione ===");
+        // print the results
+        System.out.println("=== Validation results ===");
         System.out.println("Accuracy: " + accuracy);
         System.out.println("Precision: " + precision);
         System.out.println("Recall: " + recall);
         System.out.println("F1 Score: " + f1);
 
-        System.out.println("\n=== Matrice di confusione ===");
+        System.out.println("\n=== Confusion matrix ===");
         System.out.println("True Positives: " + tp);
         System.out.println("False Positives: " + fp);
         System.out.println("True Negatives: " + tn);
@@ -192,25 +198,25 @@ public class XGBoostPhishingClassifier {
     }
 
     /**
-     * Salva il modello addestrato su file
+     * Save the trained model to file
      */
     public void saveModel(String filepath) throws Exception {
         if (booster != null) {
             booster.saveModel(new FileOutputStream(filepath));
         } else {
-            throw new IllegalStateException("Modello non addestrato");
+            throw new IllegalStateException("Untrained model");
         }
     }
 
     /**
-     * Carica un modello precedentemente salvato
+     *Load a previously saved template
      */
     public void loadModel(String filepath) throws Exception {
         File modelFile = new File(filepath);
         if (modelFile.exists()) {
             booster = XGBoost.loadModel(new FileInputStream(modelFile));
         } else {
-            throw new IllegalArgumentException("File modello non trovato: " + filepath);
+            throw new IllegalArgumentException("Template file not found: " + filepath);
         }
     }
 }

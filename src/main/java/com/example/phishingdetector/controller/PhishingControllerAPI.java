@@ -11,8 +11,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.util.Arrays;
 import java.util.HashMap;
@@ -49,7 +51,7 @@ public class PhishingControllerAPI {
 
             return ResponseEntity.ok(response);
         } catch (Exception e) {
-            logger.error("Errore durante l'analisi con Random Forest", e);
+            logger.error("Error while parsing with Random Forest", e);
             return ResponseEntity.internalServerError().build();
         }
     }
@@ -72,7 +74,7 @@ public class PhishingControllerAPI {
 
             return ResponseEntity.ok(response);
         } catch (Exception e) {
-            logger.error("Errore durante l'analisi con SVM", e);
+            logger.error("Error while parsing with SVM", e);
             return ResponseEntity.internalServerError().build();
         }
     }
@@ -95,7 +97,7 @@ public class PhishingControllerAPI {
 
             return ResponseEntity.ok(response);
         } catch (Exception e) {
-            logger.error("Errore durante l'analisi con XGBoost", e);
+            logger.error("Error while parsing with XGBoost", e);
             return ResponseEntity.internalServerError().build();
         }
     }
@@ -107,7 +109,7 @@ public class PhishingControllerAPI {
             PhishingResult svmResult = detectionService.analyzeWithSVM(request.getText(), request.getExtractedUrls());
             PhishingResult xgboostResult = detectionService.analyzeWithXGBoost(request.getText(), request.getExtractedUrls());
 
-            // Salviamo i risultati nella cache
+            // Save results in cache
             String rfKey = "rf-" + System.currentTimeMillis();
             String svmKey = "svm-" + System.currentTimeMillis();
             String xgbKey = "xgboost-" + System.currentTimeMillis();
@@ -129,7 +131,7 @@ public class PhishingControllerAPI {
 
             return ResponseEntity.ok(response);
         } catch (Exception e) {
-            logger.error("Errore durante il confronto dei classificatori", e);
+            logger.error("Error comparing classifiers", e);
             return ResponseEntity.internalServerError().build();
         }
     }
@@ -137,7 +139,7 @@ public class PhishingControllerAPI {
     @PostMapping("/feedback")
     public ResponseEntity<?> saveFeedback(@RequestBody FeedbackRequest request) {
         try {
-            logger.info("Ricevuta richiesta di feedback: {}", request);
+            logger.info("Feedback request received: {}", request);
 
             // Verifichiamo se abbiamo questo risultato nella cache
             PhishingResult cachedResult = null;
@@ -146,7 +148,7 @@ public class PhishingControllerAPI {
             }
 
             if (cachedResult != null) {
-                logger.info("Trovato risultato nella cache con ID: {}", request.getResultId());
+                logger.info("Found result in cache with ID: {}", request.getResultId());
 
                 detectionService.saveFeedback(
                         cachedResult.getEmailText(),
@@ -156,10 +158,10 @@ public class PhishingControllerAPI {
                         request.getClassifier()
                 );
             } else {
-                // Se non abbiamo il risultato in cache, procediamo comunque ma rianalizzando l'email
-                logger.warn("Risultato non trovato nella cache, rianalizzando l'email");
+                // If don't have the result in cache, we proceed anyway but re-analyzing the email
+                logger.warn("Result not found in cache, re-analyzing email");
 
-                // Rianalizziamo l'email per ottenere tutti i dati necessari
+                // reanalyze the email to get all the necessary data
                 PhishingResult freshResult = null;
                 String classifier = request.getClassifier().toLowerCase();
 
@@ -183,49 +185,25 @@ public class PhishingControllerAPI {
                 );
             }
 
-            return ResponseEntity.ok().body(Map.of("status", "success", "message", "Feedback salvato con successo"));
+            return ResponseEntity.ok().body(Map.of("status", "success", "message", "Feedback saved successfully"));
         } catch (Exception e) {
-            logger.error("Errore durante il salvataggio del feedback", e);
+            logger.error("Error saving feedback", e);
             return ResponseEntity.internalServerError().body(Map.of("status", "error", "message", e.getMessage()));
         }
     }
 
-
-    //TODO: da eliminare, sotituito con l'EmailUploadController
-    @PostMapping("/upload-eml")
-    public ResponseEntity<?> handleEmlUpload(@RequestParam("emlFile") MultipartFile file) {
-        try {
-            if (file.isEmpty()) {
-                return ResponseEntity.badRequest().body(Map.of("error", "Il file è vuoto"));
-            }
-
-            String fileName = file.getOriginalFilename();
-            if (fileName == null || !fileName.toLowerCase().endsWith(".eml")) {
-                return ResponseEntity.badRequest().body(Map.of("error", "Il file deve essere in formato .eml"));
-            }
-
-            // Estrai il contenuto dell'email con il nuovo metodo che restituisce una mappa
-            Map<String, Object> emailContent = emailParserService.parseEmlFile(file);
-
-            // Restituisci il contenuto estratto
-            return ResponseEntity.ok(emailContent);
-        } catch (Exception e) {
-            logger.error("Errore nell'elaborazione del file .eml", e);
-            return ResponseEntity.internalServerError().body(Map.of("error", e.getMessage()));
-        }
-    }
 
     public PhishingResult getResultFromCache(String resultId) {
         return resultCache.get(resultId);
     }
 
     private String summarizeFeatures(float[] embedding) {
-        // Restituiamo solo alcuni valori
+        // return only some values
         if (embedding.length > 5) {
-            return "Dimensione: " + embedding.length + ", Primi valori: " +
+            return "Size: " + embedding.length + ", First value: " +
                     Arrays.toString(Arrays.copyOfRange(embedding, 0, 5)) + "...";
         } else {
-            return "Dimensione: " + embedding.length + ", Valori: " + Arrays.toString(embedding);
+            return "Size: " + embedding.length + ", Value: " + Arrays.toString(embedding);
         }
     }
 }

@@ -8,7 +8,7 @@
 </head>
 <body>
 <div class="container mt-5">
-    <h2>Carica un file email</h2>
+    <h2>Upload an email file</h2>
 
     <div th:if="${error}" class="alert alert-danger mt-3">
         <p th:text="${error}"></p>
@@ -18,14 +18,14 @@
         <div class="card-body">
             <form action="/upload-email" method="POST" enctype="multipart/form-data" th:with="origin=${param.origin != null ? param.origin[0] : 'analyzer'}">
                 <div class="mb-3">
-                    <label for="emailFile" class="form-label">Seleziona file .eml</label>
+                    <label for="emailFile" class="form-label">Select .eml file</label>
                     <input class="form-control" type="file" id="emailFile" name="emailFile" accept=".eml" required>
                 </div>
-                <!-- Campo nascosto per l'origine -->
+                <!-- Hidden field for origin -->
                 <input type="hidden" name="origin" th:value="${origin}">
                 <div class="mb-3 d-flex gap-2">
-                    <a th:href="${origin == 'comparison' ? '/comparison' : '/analyzer'}" class="btn btn-secondary">Indietro</a>
-                    <button type="submit" class="btn btn-primary">Carica</button>
+                    <a th:href="${origin == 'comparison' ? '/comparison' : '/analyzer'}" class="btn btn-secondary">Cancel</a>
+                    <button type="submit" class="btn btn-primary">Confirm</button>
                 </div>
             </form>
         </div>

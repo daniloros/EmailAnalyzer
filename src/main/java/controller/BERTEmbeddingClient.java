@@ -22,8 +22,8 @@ public class BERTEmbeddingClient {
         API_URL = url;
     }
 
-    public BERTEmbeddingClient(String umbertoApiUrl) {
-        API_URL = umbertoApiUrl;
+    public BERTEmbeddingClient(String bertApiUrl) {
+        API_URL = bertApiUrl;
     }
 
     public BERTEmbeddingClient() {
@@ -34,17 +34,17 @@ public class BERTEmbeddingClient {
             HttpPost request = new HttpPost(API_URL);
             request.setHeader("Content-Type", "application/json");
 
-            // Creiamo il payload JSON
+            // create the JSON payload
             String json = new Gson().toJson(new EmailRequest(emailText));
             request.setEntity(new StringEntity(json, "UTF-8"));
 
-            // Facciamo la richiesta
+            // Make the request
             try (CloseableHttpResponse response = httpClient.execute(request)) {
                 String responseBody = EntityUtils.toString(response.getEntity());
 
-                // Controlla se la risposta è valida
+                // Check if the answer is valid
                 if (response.getStatusLine().getStatusCode() != 200) {
-                    throw new IOException("Errore API: " + response.getStatusLine().getStatusCode() + " - " + responseBody);
+                    throw new IOException("Error API: " + response.getStatusLine().getStatusCode() + " - " + responseBody);
                 }
 
                 EmailFromBert embeddingResponse = new Gson().fromJson(responseBody, EmailFromBert.class);
@@ -53,7 +53,7 @@ public class BERTEmbeddingClient {
         }
     }
 
-    // Classe per la richiesta
+    // Class for the request
     static class EmailRequest {
         String text;
         EmailRequest(String text) { this.text = text; }

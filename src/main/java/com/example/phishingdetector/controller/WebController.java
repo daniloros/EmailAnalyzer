@@ -4,7 +4,6 @@ import jakarta.servlet.http.HttpSession;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 
 @Controller
 public class WebController {
@@ -19,7 +18,7 @@ public class WebController {
     public String analyzer(Model model, HttpSession session) {
         model.addAttribute("pageTitle", "Email Analyzer");
 
-        // Recupera i dati dalla sessione se disponibili
+        // Retrieve data from session if available
         if (session.getAttribute("emailContent") != null) {
             model.addAttribute("emailContent", session.getAttribute("emailContent"));
             model.addAttribute("emailSubject", session.getAttribute("emailSubject"));
@@ -38,7 +37,7 @@ public class WebController {
     public String comparison(Model model, HttpSession session) {
         model.addAttribute("pageTitle", "Classifier Comparison");
 
-        // Recupera i dati dalla sessione se disponibili
+        //Retrieve data from session if available
         if (session.getAttribute("emailContent") != null) {
             model.addAttribute("emailContent", session.getAttribute("emailContent"));
             model.addAttribute("emailSubject", session.getAttribute("emailSubject"));

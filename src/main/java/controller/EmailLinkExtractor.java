@@ -19,12 +19,12 @@ public class EmailLinkExtractor {
 
     public void extractLinkFeatures(MailData mailData, List<String> preExtractedUrls) {
         if (preExtractedUrls != null && !preExtractedUrls.isEmpty()) {
-            // Analizza gli URL pre-estratti
+            // Parse pre-extracted URLs
             for (String url : preExtractedUrls) {
                 analyzeUrl(url, mailData);
             }
         }
-        //estrai il link dal testo
+        //extract link from text
         findLinkInText(emailText, mailData);
     }
 
@@ -39,9 +39,8 @@ public class EmailLinkExtractor {
         while (matcher.find()) {
             String originalUrl = matcher.group();
 
-            // Se il link è un IP, verifichiamo con il metodo isValidIP
+            // If the link is an IP, we check with the isValidIP method
             if (isValidIP(originalUrl)) {
-//                System.out.println("Indirizzo IP valido trovato: " + originalUrl);
                 mailData.setContainsIpAsUrl(true);
                 continue;
             }
@@ -62,13 +61,13 @@ public class EmailLinkExtractor {
     }
 
     private static boolean isValidURL(String url) {
-        // Abilita http e https
+        // Enable http and https
         String[] schemes = {"http", "https"};
         UrlValidator urlValidator = new UrlValidator(schemes);
 
-        // Aggiungi http:// se manca il protocollo
+        // Add http:// if protocol is missing
         if (!url.startsWith("http://") && !url.startsWith("https://")) {
-            url = "http://" + url; // se manca lo inserisco come  "http://"
+            url = "http://" + url; //if it is missing I insert it as "http://"
         }
 
         return urlValidator.isValid(url);
@@ -76,23 +75,22 @@ public class EmailLinkExtractor {
 
     private static boolean isValidIP(String url) {
         try {
-            // Rimuove il protocollo e il percorso per ottenere solo l'host
+            // Remove the protocol and path to get only the host
             java.net.URL netUrl = new java.net.URL(url.startsWith("http") ? url : "http://" + url);
             String host = netUrl.getHost();
 
-            // Regex per IPv4
+            // Regex for IPv4
             String ipPattern = "^(?:\\d{1,3}\\.){3}\\d{1,3}$";
             Pattern pattern = Pattern.compile(ipPattern);
             Matcher matcher = pattern.matcher(host);
 
             return matcher.matches();
         } catch (Exception e) {
-            return false; // In caso di URL non valido
+            return false; // In case of invalid URL
         }
     }
 
-    //controllo per attacco omografico
-    // ritorna true se trova caratteri strani
+    //check for homographic attack
     private static boolean containsNonASCIICharacters(String domain) {
         return !Charset.forName("US-ASCII").newEncoder().canEncode(domain);
     }

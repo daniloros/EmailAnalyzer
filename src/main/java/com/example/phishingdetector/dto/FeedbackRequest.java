@@ -3,7 +3,7 @@ public class FeedbackRequest {
     private String emailText;
     private boolean userFeedback;
     private String classifier;
-    private String resultId; // ID per riferimento nella cache
+    private String resultId; // ID for cache reference
 
     public FeedbackRequest() {
     }

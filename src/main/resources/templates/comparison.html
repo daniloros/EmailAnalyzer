@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title th:text="${pageTitle}">Confronta Classificatori</title>
+    <title th:text="${pageTitle}">Compare Classifiers</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="/css/style.css">
     <style>
@@ -23,10 +23,10 @@
         <div class="collapse navbar-collapse" id="navbarNav">
             <ul class="navbar-nav">
                 <li class="nav-item">
-                    <a class="nav-link" href="/analyzer">Analizza Mail</a>
+                    <a class="nav-link" href="/analyzer">Analyze Mail</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link active" href="/comparison">Confronta Classificatori</a>
+                    <a class="nav-link active" href="/comparison">Compare Classifiers</a>
                 </li>
             </ul>
         </div>
@@ -35,28 +35,28 @@
 
 <!-- Main content -->
 <div class="container mt-4">
-    <h1 class="mb-4">Confronta i Classificatori</h1>
+    <h1 class="mb-4">Compare Classifiers</h1>
 
-    <!-- Opzioni per l'analisi dell'email -->
+    <!-- Email Analysis Options -->
     <div class="card mb-4">
         <div class="card-header">
-            <h4>Scegli come analizzare l'email</h4>
+            <h4>Choose how to analyze the email</h4>
         </div>
         <div class="card-body">
-            <p>Seleziona una delle seguenti opzioni:</p>
+            <p>Select one of the following options:</p>
             <div class="d-flex gap-3 mb-4">
-                <a href="/upload?origin=comparison" class="btn btn-primary">Carica file .eml</a>
-                <button class="btn btn-secondary" id="showManualInput" onclick="toggleManualInput()">Inserisci testo manualmente</button>
+                <a href="/upload?origin=comparison" class="btn btn-primary">Upload .eml file</a>
+                <button class="btn btn-secondary" id="showManualInput" onclick="toggleManualInput()">Enter text manually</button>
             </div>
         </div>
     </div>
 
-    <!-- Sezione per visualizzare i dettagli dell'email (se disponibili) -->
+    <!-- Section to view email details (if available) -->
     <div id="emailDetailsSection" th:if="${emailContent != null and !emailContent.isEmpty()}">
-        <!-- URL trovati nell'email -->
+        <!-- URLs found in email -->
         <div class="card mb-4">
             <div class="card-header">
-                <h4>URL trovati nell'email</h4>
+                <h4>URLs found in email</h4>
             </div>
             <div class="card-body">
                 <div id="urlListDisplay">
@@ -69,23 +69,23 @@
                         </ul>
                     </div>
                     <div id="noUrlsFound" th:if="${urls == null or urls.isEmpty()}" class="alert alert-info">
-                        Nessun URL trovato in questa email.
+                        No URLs found in this email.
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Form di analisi dell'email (per input manuale) -->
+    <!-- Email Analysis Form (for manual input) -->
     <div id="manualInputSection">
         <div class="card mb-4">
             <div class="card-header">
-                <h4>Confronto Classificatori</h4>
+                <h4>Classifier Comparison</h4>
             </div>
             <div class="card-body">
                 <form id="emailForm">
                     <div class="mb-3">
-                        <label for="emailText" class="form-label">Testo dell'email</label>
+                        <label for="emailText" class="form-label">Email text</label>
                         <textarea th:attr="disabled=${emailContent != null and !emailContent.isEmpty()}"
                                   class="form-control" id="emailText" rows="10" required
                                   th:text="${emailContent}"></textarea>
@@ -96,62 +96,62 @@
     </div>
     <div class="card mb-4">
         <div class="card-body">
-            <p>Questa operazione confronterà l'email con tutti i classificatori disponibili.</p>
-            <button type="submit" class="btn btn-primary" onclick="compareClassifiers(event)">Confronta Classificatori
+            <p>This operation will compare the email with all available classifiers.</p>
+            <button type="submit" class="btn btn-primary" onclick="compareClassifiers(event)">Compare Classifiers
             </button>
             <div id="loadingSpinner" class="mt-3 text-center" style="display: none;">
                 <div class="spinner-border text-primary" role="status">
-                    <span class="visually-hidden">Analisi in corso...</span>
+                    <span class="visually-hidden">Analysis in progress..</span>
                 </div>
-                <p class="mt-2">Analisi in corso con tutti i classificatori...</p>
+                <p class="mt-2">Analysis in progress with all classifiers...</p>
             </div>
         </div>
     </div>
 
-    <!-- Risultati dell'analisi -->
+    <!-- Analysis results -->
     <div id="resultSection" style="display: none;">
         <div class="card mb-4">
             <div class="card-header">
-                <h4>Risultati Comparazione</h4>
+                <h4>Comparison Results</h4>
             </div>
             <div class="card-body">
                 <div class="table-responsive">
                     <table class="table table-bordered">
                         <thead>
                         <tr>
-                            <th>Classificatore</th>
-                            <th>Risultato</th>
+                            <th>Classifier</th>
+                            <th>Result</th>
                             <th>Feedback</th>
                         </tr>
                         </thead>
                         <tbody>
                         <tr id="rf-result-row">
                             <td>Random Forest</td>
-                            <td id="rf-result-cell"><span id="rf-badge" class="badge rounded-pill fw-bold">In attesa...</span></td>
+                            <td id="rf-result-cell"><span id="rf-badge" class="badge rounded-pill fw-bold">Waiting...</span></td>
                             <td>
                                 <div class="d-flex gap-2">
-                                    <button class="btn btn-sm btn-outline-success" id="rf-yes">Corretto</button>
-                                    <button class="btn btn-sm btn-outline-danger" id="rf-no">Errato</button>
+                                    <button class="btn btn-sm btn-outline-success" id="rf-yes">Correct</button>
+                                    <button class="btn btn-sm btn-outline-danger" id="rf-no">Wrong</button>
                                 </div>
                             </td>
                         </tr>
                         <tr id="svm-result-row">
                             <td>SVM</td>
-                            <td id="svm-result-cell"><span id="svm-badge" class="badge rounded-pill fw-bold">In attesa...</span></td>
+                            <td id="svm-result-cell"><span id="svm-badge" class="badge rounded-pill fw-bold">Waiting...</span></td>
                             <td>
                                 <div class="d-flex gap-2">
-                                    <button class="btn btn-sm btn-outline-success" id="svm-yes">Corretto</button>
-                                    <button class="btn btn-sm btn-outline-danger" id="svm-no">Errato</button>
+                                    <button class="btn btn-sm btn-outline-success" id="svm-yes">Correct</button>
+                                    <button class="btn btn-sm btn-outline-danger" id="svm-no">Wrong</button>
                                 </div>
                             </td>
                         </tr>
                         <tr id="xgboost-result-row">
                             <td>XGBoost</td>
-                            <td id="xgboost-result-cell"><span id="xgboost-badge" class="badge rounded-pill fw-bold">In attesa...</span></td>
+                            <td id="xgboost-result-cell"><span id="xgboost-badge" class="badge rounded-pill fw-bold">Waiting...</span></td>
                             <td>
                                 <div class="d-flex gap-2">
-                                    <button class="btn btn-sm btn-outline-success" id="xgboost-yes">Corretto</button>
-                                    <button class="btn btn-sm btn-outline-danger" id="xgboost-no">Errato</button>
+                                    <button class="btn btn-sm btn-outline-success" id="xgboost-yes">Correct</button>
+                                    <button class="btn btn-sm btn-outline-danger" id="xgboost-no">Wrong</button>
                                 </div>
                             </td>
                         </tr>
@@ -162,46 +162,46 @@
 
                 <div id="feedbackMessage" class="alert mt-3" style="display: none;"></div>
 
-                <!-- Pulsante per l'analisi Gemini -->
+                <!-- Gemini Analysis Button -->
                 <div class="mt-4 border-top pt-3">
-                    <h5>Analisi AI avanzata:</h5>
-                    <p>Richiedi un'analisi dettagliata dell'email utilizzando l'intelligenza artificiale</p>
+                    <h5>Advanced AI analytics:</h5>
+                    <p>RGet detailed email analytics using AI</p>
                     <div class="d-flex">
                         <button id="geminiRfBtn" class="btn btn-outline-primary me-2" onclick="requestGeminiAnalysis('rf')"  disabled>
                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
                                  class="bi bi-stars" viewBox="0 0 16 16" style="margin-right: 5px;">
                                 <path d="M7.657 6.247c.11-.33.576-.33.686 0l.645 1.937a2.89 2.89 0 0 0 1.829 1.828l1.936.645c.33.11.33.576 0 .686l-1.937.645a2.89 2.89 0 0 0-1.828 1.829l-.645 1.936a.361.361 0 0 1-.686 0l-.645-1.937a2.89 2.89 0 0 0-1.828-1.828l-1.937-.645a.361.361 0 0 1 0-.686l1.937-.645a2.89 2.89 0 0 0 1.828-1.828l.645-1.937zM3.794 1.148a.217.217 0 0 1 .412 0l.387 1.162c.173.518.579.924 1.097 1.097l1.162.387a.217.217 0 0 1 0 .412l-1.162.387A1.734 1.734 0 0 0 4.593 5.69l-.387 1.162a.217.217 0 0 1-.412 0L3.407 5.69A1.734 1.734 0 0 0 2.31 4.593l-1.162-.387a.217.217 0 0 1 0-.412l1.162-.387A1.734 1.734 0 0 0 3.407 2.31l.387-1.162zM10.863.099a.145.145 0 0 1 .274 0l.258.774c.115.346.386.617.732.732l.774.258a.145.145 0 0 1 0 .274l-.774.258a1.156 1.156 0 0 0-.732.732l-.258.774a.145.145 0 0 1-.274 0l-.258-.774a1.156 1.156 0 0 0-.732-.732L9.1 2.137a.145.145 0 0 1 0-.274l.774-.258c.346-.115.617-.386.732-.732L10.863.1z"/>
                             </svg>
-                            Analizza con RF
+                            Analyze with RF
                         </button>
                         <button id="geminiSvmBtn" class="btn btn-outline-primary me-2" onclick="requestGeminiAnalysis('svm')" disabled>
                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
                                  class="bi bi-stars" viewBox="0 0 16 16" style="margin-right: 5px;">
                                 <path d="M7.657 6.247c.11-.33.576-.33.686 0l.645 1.937a2.89 2.89 0 0 0 1.829 1.828l1.936.645c.33.11.33.576 0 .686l-1.937.645a2.89 2.89 0 0 0-1.828 1.829l-.645 1.936a.361.361 0 0 1-.686 0l-.645-1.937a2.89 2.89 0 0 0-1.828-1.828l-1.937-.645a.361.361 0 0 1 0-.686l1.937-.645a2.89 2.89 0 0 0 1.828-1.828l.645-1.937zM3.794 1.148a.217.217 0 0 1 .412 0l.387 1.162c.173.518.579.924 1.097 1.097l1.162.387a.217.217 0 0 1 0 .412l-1.162.387A1.734 1.734 0 0 0 4.593 5.69l-.387 1.162a.217.217 0 0 1-.412 0L3.407 5.69A1.734 1.734 0 0 0 2.31 4.593l-1.162-.387a.217.217 0 0 1 0-.412l1.162-.387A1.734 1.734 0 0 0 3.407 2.31l.387-1.162zM10.863.099a.145.145 0 0 1 .274 0l.258.774c.115.346.386.617.732.732l.774.258a.145.145 0 0 1 0 .274l-.774.258a1.156 1.156 0 0 0-.732.732l-.258.774a.145.145 0 0 1-.274 0l-.258-.774a1.156 1.156 0 0 0-.732-.732L9.1 2.137a.145.145 0 0 1 0-.274l.774-.258c.346-.115.617-.386.732-.732L10.863.1z"/>
                             </svg>
-                            Analizza con SVM
+                            Analyze with  SVM
                         </button>
                         <button id="geminiXgboostBtn" class="btn btn-outline-primary" onclick="requestGeminiAnalysis('xgboost')"  disabled>
                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
                                  class="bi bi-stars" viewBox="0 0 16 16" style="margin-right: 5px;">
                                 <path d="M7.657 6.247c.11-.33.576-.33.686 0l.645 1.937a2.89 2.89 0 0 0 1.829 1.828l1.936.645c.33.11.33.576 0 .686l-1.937.645a2.89 2.89 0 0 0-1.828 1.829l-.645 1.936a.361.361 0 0 1-.686 0l-.645-1.937a2.89 2.89 0 0 0-1.828-1.828l-1.937-.645a.361.361 0 0 1 0-.686l1.937-.645a2.89 2.89 0 0 0 1.828-1.828l.645-1.937zM3.794 1.148a.217.217 0 0 1 .412 0l.387 1.162c.173.518.579.924 1.097 1.097l1.162.387a.217.217 0 0 1 0 .412l-1.162.387A1.734 1.734 0 0 0 4.593 5.69l-.387 1.162a.217.217 0 0 1-.412 0L3.407 5.69A1.734 1.734 0 0 0 2.31 4.593l-1.162-.387a.217.217 0 0 1 0-.412l1.162-.387A1.734 1.734 0 0 0 3.407 2.31l.387-1.162zM10.863.099a.145.145 0 0 1 .274 0l.258.774c.115.346.386.617.732.732l.774.258a.145.145 0 0 1 0 .274l-.774.258a1.156 1.156 0 0 0-.732.732l-.258.774a.145.145 0 0 1-.274 0l-.258-.774a1.156 1.156 0 0 0-.732-.732L9.1 2.137a.145.145 0 0 1 0-.274l.774-.258c.346-.115.617-.386.732-.732L10.863.1z"/>
                             </svg>
-                            Analizza con XGBoost
+                            Analyze with XGBoost
                         </button>
                     </div>
                 </div>
 
-                <!-- Sezione per l'analisi di Gemini (mostrata dopo la richiesta) -->
+                <!-- Gemini Analysis Section (shown after request) -->
                 <div id="geminiAnalysisSection" style="display: none;" class="mt-3">
                     <div id="geminiLoadingIndicator" class="text-center p-3" style="display: none;">
                         <div class="spinner-border text-primary" role="status">
-                            <span class="visually-hidden">Elaborazione in corso...</span>
+                                <span class="visually-hidden">Processing in progress...</span>
                         </div>
-                        <p class="mt-2">Generazione analisi in corso...</p>
+                        <p class="mt-2">Generating analysis...</p>
                     </div>
                     <div id="geminiAnalysisContent" class="card bg-light">
                         <div class="card-header">
-                            <h5 class="mb-0">Analisi AI con <span id="geminiClassifierName">classificatore</span></h5>
+                            <h5 class="mb-0">AI analytics with<span id="geminiClassifierName">classificator</span></h5>
                         </div>
                         <div class="card-body">
                             <div id="geminiAnalysisText" class="text-pre-wrap"></div>
@@ -245,11 +245,11 @@
 
         const emailText = document.getElementById('emailText').value;
         if (!emailText) {
-            alert('Inserisci il testo dell\'email');
+            alert('Enter the email text');
             return;
         }
 
-        // Recupera gli URL dalla pagina se disponibili
+        // Get URLs from the page if available
         const extractedUrls = [];
         const urlsList = document.getElementById('urlsList');
         if (urlsList) {
@@ -259,7 +259,7 @@
             });
         }
 
-        // Prepara i dati per l'API
+        // Prepare data for API
         const requestData = {
             text: emailText,
             extractedUrls: extractedUrls
@@ -275,11 +275,11 @@
         const compareBtn = document.querySelector('button[onclick="compareClassifiers(event)"]');
         compareBtn.disabled = true;
 
-        // Nascondi la sezione di analisi Gemini
+        // Hide Gemini analysis section
         const geminiSection = document.getElementById('geminiAnalysisSection');
         geminiSection.style.display = 'none';
 
-        // Effettua la richiesta all'API
+        // Make the request to the API
         fetch('/api/analyze/compare', {
             method: 'POST',
             headers: {
@@ -289,31 +289,29 @@
         })
             .then(response => {
                 if (!response.ok) {
-                    throw new Error('Errore durante l\'analisi di confronto');
+                    throw new Error('Error while parsing comparison');
                 }
                 return response.json();
             })
             .then(data => {
                 // Nascondi lo spinner
                 loadingSpinner.style.display = 'none';
-                // Riabilita il pulsante
+                // Re-enable the button
                 compareBtn.disabled = false;
                 // Visualizza i risultati
                 displayComparisonResults(data);
             })
             .catch(error => {
-                console.error('Errore:', error);
-                // Nascondi lo spinner anche in caso di errore
+                console.error('Error:', error);
                 loadingSpinner.style.display = 'none';
-                // Riabilita il pulsante
                 compareBtn.disabled = false;
-                alert('Errore durante l\'analisi di confronto: ' + error.message);
+                alert('Error while parsing comparison: ' + error.message);
             });
     }
 
-    // Funzione per visualizzare i risultati del confronto
+    // Function to display the comparison results
     function displayComparisonResults(data) {
-        // Mostra la sezione dei risultati
+        // Show results section
         const resultSection = document.getElementById('resultSection');
         resultSection.style.display = 'block';
 
@@ -322,12 +320,12 @@
         updateResultBadge('svm', data.svmPrediction);
         updateResultBadge('xgboost', data.xgboostPrediction);
 
-        // Configura i pulsanti di feedback
+        // Configure feedback buttons
         setupFeedbackButton('rf', data.rfResultId, data.emailText, data.rfPrediction);
         setupFeedbackButton('svm', data.svmResultId, data.emailText, data.svmPrediction);
         setupFeedbackButton('xgboost', data.xgboostResultId, data.emailText, data.xgboostPrediction);
 
-        // Memorizza i dati di classificazione come attributi dei pulsanti Gemini
+        // Store rating data as Gemini button attributes
         const rfBtn = document.getElementById('geminiRfBtn');
         const svmBtn = document.getElementById('geminiSvmBtn');
         const xgboostBtn = document.getElementById('geminiXgboostBtn');
@@ -351,7 +349,7 @@
         xgboostBtn.disabled = false;
     }
 
-    // Funzione per aggiornare i badge dei risultati
+    // Function to update the result badges
     function updateResultBadge(classifier, isPhishing) {
         const badge = document.getElementById(`${classifier}-badge`);
         const cell = document.getElementById(`${classifier}-result-cell`);
@@ -361,43 +359,38 @@
             badge.className = 'badge rounded-pill bg-danger fw-bold';
             cell.className = 'bg-danger text-white';
         } else {
-            badge.textContent = 'LEGITTIMA';
+            badge.textContent = 'LEGIIT';
             badge.className = 'badge rounded-pill bg-success fw-bold';
             cell.className = 'bg-success text-white';
         }
     }
 
-    // Funzione per configurare i pulsanti di feedback
+    // Function to configure feedback buttons
     function setupFeedbackButton(classifier, resultId, emailText, prediction) {
         const yesBtn = document.getElementById(`${classifier}-yes`);
         const noBtn = document.getElementById(`${classifier}-no`);
 
-        // Ripristina lo stato dei pulsanti
         yesBtn.disabled = false;
         noBtn.disabled = false;
         yesBtn.className = 'btn btn-sm btn-outline-success';
         noBtn.className = 'btn btn-sm btn-outline-danger';
 
-        // Aggiungi handler per il pulsante "Corretto" (conferma la previsione)
         yesBtn.onclick = function () {
             sendFeedback(classifier, resultId, emailText, prediction);
         };
 
-        // Aggiungi handler per il pulsante "Errato" (inverte la previsione)
         noBtn.onclick = function () {
             sendFeedback(classifier, resultId, emailText, !prediction);
         };
     }
 
-    // Funzione per inviare il feedback
+    // Function to send feedback
     function sendFeedback(classifier, resultId, emailText, userFeedback) {
-        // Disabilita i pulsanti durante l'invio
         const yesBtn = document.getElementById(`${classifier}-yes`);
         const noBtn = document.getElementById(`${classifier}-no`);
         yesBtn.disabled = true;
         noBtn.disabled = true;
 
-        // Prepara i dati per l'API
         const feedbackData = {
             emailText: emailText,
             userFeedback: userFeedback,
@@ -405,18 +398,15 @@
             resultId: resultId
         };
 
-        // Mostra indicatore di caricamento nel pulsante
         const clickedBtn = userFeedback ? yesBtn : noBtn;
         const originalBtnText = clickedBtn.innerHTML;
         clickedBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>';
 
-        // Mostra messaggio di caricamento
         const feedbackMessage = document.getElementById('feedbackMessage');
         feedbackMessage.className = 'alert alert-info mt-3';
-        feedbackMessage.textContent = 'Invio feedback in corso...';
+        feedbackMessage.textContent = 'Sending feedback in progress...';
         feedbackMessage.style.display = 'block';
 
-        // Effettua la richiesta all'API
         fetch('/api/feedback', {
             method: 'POST',
             headers: {
@@ -426,43 +416,36 @@
         })
             .then(response => {
                 if (!response.ok) {
-                    throw new Error('Errore durante l\'invio del feedback');
+                    throw new Error('Error sending feedback');
                 }
                 return response.json();
             })
             .then(response => {
-                // Ripristina il testo del pulsante
                 clickedBtn.innerHTML = originalBtnText;
 
-                // Disabilita entrambi i pulsanti dopo il successo
                 yesBtn.disabled = true;
                 noBtn.disabled = true;
 
-                // Aggiungi una classe per mostrare quale feedback è stato inviato
                 clickedBtn.classList.remove('btn-outline-success', 'btn-outline-danger');
                 clickedBtn.classList.add(userFeedback ? 'btn-success' : 'btn-danger');
 
-                // Mostra un messaggio temporaneo
                 feedbackMessage.className = 'alert alert-success mt-3';
-                feedbackMessage.textContent = `Feedback inviato con successo per il classificatore ${classifier.toUpperCase()}`;
+                feedbackMessage.textContent = `Feedback sent successfully for the classifier: ${classifier.toUpperCase()}`;
             })
             .catch(error => {
-                console.error('Errore:', error);
+                console.error('Error:', error);
 
-                // Ripristina il testo del pulsante
                 clickedBtn.innerHTML = originalBtnText;
 
-                // Riabilita i pulsanti in caso di errore
                 yesBtn.disabled = false;
                 noBtn.disabled = false;
 
-                // Mostra il messaggio di errore
                 feedbackMessage.className = 'alert alert-danger mt-3';
-                feedbackMessage.textContent = 'Errore durante l\'invio del feedback: ' + error.message;
+                feedbackMessage.textContent = 'Error sending feedback: ' + error.message;
             });
     }
 
-    // Funzione per richiedere l'analisi Gemini
+    // Function to request Gemini analysis
     function requestGeminiAnalysis(classifier) {
         const btnId = `gemini${classifier.charAt(0).toUpperCase() + classifier.slice(1)}Btn`;
         const geminiBtn = document.getElementById(btnId);
@@ -472,7 +455,6 @@
         const geminiText = document.getElementById('geminiAnalysisText');
         const geminiClassifierName = document.getElementById('geminiClassifierName');
 
-        // Ottieni i dati memorizzati nel pulsante
         const emailText = geminiBtn.dataset.emailText;
         const classification = geminiBtn.dataset.classification === 'true';
         const classifierName = geminiBtn.dataset.classifier;
@@ -483,7 +465,6 @@
             return;
         }
 
-        // Raccogli gli URL dal DOM se disponibili
         const urls = [];
         const urlsList = document.getElementById('urlsList');
         if (urlsList) {
@@ -492,26 +473,21 @@
                 urls.push(link.textContent);
             });
         } else {
-            console.log("Nessun URL trovato nel DOM, verranno estratti dal testo");
+            console.log("No URLs found in DOM, they will be extracted from text");
         }
 
-        // Aggiorna il nome del classificatore nella scheda
         geminiClassifierName.textContent = classifierName;
 
-        // Disabilita tutti i pulsanti durante l'analisi
         document.getElementById('geminiRfBtn').disabled = true;
         document.getElementById('geminiSvmBtn').disabled = true;
         document.getElementById('geminiXgboostBtn').disabled = true;
 
-        // Mostra la sezione di analisi con l'indicatore di caricamento
         geminiSection.style.display = 'block';
         geminiLoading.style.display = 'block';
         geminiContent.style.display = 'none';
 
-        // Scorri alla sezione di analisi
         geminiSection.scrollIntoView({behavior: 'smooth'});
 
-        // Prepara i dati per l'API
         const requestData = {
             emailText: emailText,
             classification: classification,
@@ -520,7 +496,6 @@
             resultId: resultId
         };
 
-        // Effettua la richiesta all'API Gemini
         fetch('/api/gemini/analyze', {
             method: 'POST',
             headers: {
@@ -535,38 +510,31 @@
                 return response.json();
             })
             .then(response => {
-                // Nascondi l'indicatore di caricamento
                 geminiLoading.style.display = 'none';
 
-                // Mostra il contenuto dell'analisi
                 geminiContent.style.display = 'block';
 
-                // Formatta e visualizza l'analisi
                 if (response.status === 'success' && response.analysis) {
                     geminiText.innerHTML = response.analysis.replace(/\n/g, '<br>');
                 } else {
-                    geminiText.innerHTML = 'Non è stato possibile ottenere un\'analisi completa.';
+                    geminiText.innerHTML = 'It was not possible to obtain a complete analysis.';
                     if (response.message) {
-                        geminiText.innerHTML += '<br><br>Dettagli: ' + response.message;
+                        geminiText.innerHTML += '<br><br>Details: ' + response.message;
                     }
                 }
 
-                // Riabilita i pulsanti
                 document.getElementById('geminiRfBtn').disabled = false;
                 document.getElementById('geminiSvmBtn').disabled = false;
                 document.getElementById('geminiXgboostBtn').disabled = false;
             })
             .catch(error => {
-                console.error('Errore:', error);
+                console.error('Error:', error);
 
-                // Nascondi l'indicatore di caricamento
                 geminiLoading.style.display = 'none';
 
-                // Mostra il messaggio di errore
                 geminiContent.style.display = 'block';
-                geminiText.innerHTML = 'Errore durante l\'analisi: ' + error.message;
+                geminiText.innerHTML = 'Error while parsing: ' + error.message;
 
-                // Riabilita i pulsanti
                 document.getElementById('geminiRfBtn').disabled = false;
                 document.getElementById('geminiSvmBtn').disabled = false;
                 document.getElementById('geminiXgboostBtn').disabled = false;
