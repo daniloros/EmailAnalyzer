@@ -138,9 +138,9 @@ public class SVMPhishingClassifier {
             dataset.add(new DenseInstance(1.0, values));
         }
 
-        // perform cross-validation
+
         Evaluation eval = new Evaluation(dataset);
-        eval.crossValidateModel(classifier, dataset, 10, new Random(1));
+        eval.evaluateModel(classifier, dataset);
 
         // Print the detailed results
         System.out.println("=== SVM Evaluation Results ===");

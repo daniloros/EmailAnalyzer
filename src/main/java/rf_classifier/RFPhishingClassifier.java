@@ -149,9 +149,8 @@ public class RFPhishingClassifier {
             dataset.add(new DenseInstance(1.0, values));
         }
 
-        //perform a 10-fold cross validation
         Evaluation eval = new Evaluation(dataset);
-        eval.crossValidateModel(classifier, dataset, 10, new Random(1));
+        eval.evaluateModel(classifier, dataset);
 
         // Print the results
         System.out.println("=== Validation results ===");
