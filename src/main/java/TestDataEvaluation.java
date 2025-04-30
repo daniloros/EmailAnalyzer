@@ -13,8 +13,8 @@ public class TestDataEvaluation {
         try {
             // Configuration
             String datasetPath = "src/main/resources/dataset/evaluation_set";
-            String inputJsonPath = "src/main/resources/dataset/evaluation_set/evalution_set_with_sentiment_NOT_evaluated.json";
-            String outputFileName = "/evaluation_set_EVALUATED.json";
+            String inputJsonPath = "src/main/resources/dataset/evaluation_set/validation_set_NOT_evaluated_400.json";
+            String outputFileName = "/validation_set_EVALUATED_400.json";
             // Step 1: Process all emails once
             EmailFeatureProcessor processor = new EmailFeatureProcessor(datasetPath);
 
@@ -42,9 +42,9 @@ public class TestDataEvaluation {
 
             // Step 4: Train all models using the same processed data
 
-            String rfModelPath = "src/main/resources/models/rf_model.model";
-            String svmModelPath = "src/main/resources/models/svm_model.model";
-            String xgboostModelPath = "src/main/resources/models/xgboost_model.model";
+            String rfModelPath = "rf_model_2000.model";
+            String svmModelPath = "svm_model_2000.model";
+            String xgboostModelPath = "xgboost_model_2000.model";
 
 
             // Train Random Forest

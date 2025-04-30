@@ -12,9 +12,9 @@ public class TrainingModels {
     public static void main(String[] args) {
         try {
             // Configuration
-            String datasetPath = "src/main/resources/dataset/processed";
-            String inputJsonPath = "src/main/resources/dataset/emails_sentiment.json";
-            String outputFileName = "/unified_feedback_dataset.json";
+            String datasetPath = "src/main/resources/dataset/training_set";
+            String inputJsonPath = "src/main/resources/dataset/training_set/training_set_NOT_evaluated_2000.json";
+            String outputFileName = "/training_set_EVALUATED_2000.json";
 
             // Step 1: Process all emails once
             EmailFeatureProcessor processor = new EmailFeatureProcessor(datasetPath);
@@ -47,24 +47,24 @@ public class TrainingModels {
             System.out.println("\nTraining Random Forest...");
             RFPhishingClassifier rfClassifier = new RFPhishingClassifier();
             rfClassifier.train(embeddings, labels);
-            rfClassifier.evaluate(embeddings, labels);
-            rfClassifier.saveModel("rf_model_test_march.model");
+//            rfClassifier.evaluate(embeddings, labels);
+            rfClassifier.saveModel("rf_model_2000.model");
             System.out.println("Random Forest model saved successfully");
 
             // Train SVM
             System.out.println("\nTraining SVM...");
             SVMPhishingClassifier svmClassifier = new SVMPhishingClassifier();
             svmClassifier.train(embeddings, labels);
-            svmClassifier.evaluate(embeddings, labels);
-            svmClassifier.saveModel("svm_model_test_march.model");
+//            svmClassifier.evaluate(embeddings, labels);
+            svmClassifier.saveModel("svm_model_2000.model");
             System.out.println("SVM model saved successfully");
 
             // Train XGBoost
             System.out.println("\nTraining XGBoost...");
             XGBoostPhishingClassifier xgbClassifier = new XGBoostPhishingClassifier();
             xgbClassifier.train(embeddings, labels);
-            xgbClassifier.evaluate(embeddings, labels);
-            xgbClassifier.saveModel("xgboost_model_march.model");
+//            xgbClassifier.evaluate(embeddings, labels);
+            xgbClassifier.saveModel("xgboost_model_2000.model");
             System.out.println("XGBoost model saved successfully");
 
             System.out.println("\nAll models trained and saved successfully!");
