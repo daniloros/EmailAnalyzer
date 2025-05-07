@@ -21,7 +21,7 @@ import java.util.concurrent.CompletableFuture;
 @Service
 public class GeminiService {
     private static final Logger logger = LoggerFactory.getLogger(GeminiService.class);
-    private static final String GEMINI_API_ENDPOINT = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-thinking-exp-01-21:generateContent";
+    private static final String GEMINI_API_ENDPOINT = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite:generateContent";
     private final ObjectMapper objectMapper = new ObjectMapper();
     private final HttpClient httpClient;
 
@@ -222,5 +222,103 @@ public class GeminiService {
             logger.error("Error extracting Gemini response", e);
             return "Error processing response: " + e.getMessage();
         }
+    }
+
+    public CompletableFuture<String> analyzeForCompareEmailWithGemini(String emailContent, List<String> urls, float[] embedding) {
+        try {
+            if (apiKey == null || apiKey.isEmpty()) {
+                CompletableFuture<String> future = new CompletableFuture<>();
+                future.complete("Error: Gemini API key not configureda");
+                return future;
+            }
+
+            String prompt = buildPromptForCompare(emailContent, urls, embedding);
+
+            logger.debug("PROMPT SENT TO GEMINI:\n{}", prompt);
+
+
+            //Builds JSON payload for Gemini API
+            ObjectNode contentNode = objectMapper.createObjectNode();
+            contentNode.put("role", "user");
+            contentNode.put("parts", objectMapper.createArrayNode().add(
+                    objectMapper.createObjectNode().put("text", prompt)
+            ));
+
+            ObjectNode requestBody = objectMapper.createObjectNode();
+            ArrayNode contentsArray = objectMapper.createArrayNode();
+            contentsArray.add(contentNode);
+            requestBody.set("contents", contentsArray);
+
+
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(URI.create(GEMINI_API_ENDPOINT + "?key=" + apiKey))
+                    .header("Content-Type", "application/json")
+                    .POST(HttpRequest.BodyPublishers.ofString(requestBody.toString()))
+                    .build();
+
+            return httpClient.sendAsync(request, HttpResponse.BodyHandlers.ofString())
+                    .thenApply(response -> {
+                        if (response.statusCode() == 200) {
+                            try {
+                                JsonNode responseJson = objectMapper.readTree(response.body());
+                                return extractGeminiResponse(responseJson);
+                            } catch (Exception e) {
+                                logger.error("Error parsing Gemini response", e);
+                                return "EError processing response: " + e.getMessage();
+                            }
+                        } else {
+                            logger.error("Error calling Gemini API: " + response.statusCode() + " - " + response.body());
+                            return "Error calling Gemini: " + response.statusCode();
+                        }
+                    })
+                    .exceptionally(ex -> {
+                        logger.error("Exception while calling Gemini API", ex);
+                        return "Connection error: " + ex.getMessage();
+                    });
+        } catch (Exception e) {
+            logger.error("Error preparing request to Gemini", e);
+            CompletableFuture<String> future = new CompletableFuture<>();
+            future.completeExceptionally(e);
+            return future;
+        }
+    }
+
+    private String buildPromptForCompare(String emailContent, List<String> urls, float[] embedding) {
+        StringBuilder prompt = new StringBuilder();
+
+        prompt.append("You are a cybersecurity expert tasked with classifying an email as phishing or legitimate. ");
+        prompt.append("Make an independent assessment based solely on the email content and technical features.\n\n");
+
+        prompt.append("CONTENT OF THE EMAIL:\n").append(emailContent).append("\n\n");
+
+        // URL trovati
+        prompt.append("URLS FOUND IN THE EMAIL:\n");
+        if (urls != null && !urls.isEmpty()) {
+            for (String url : urls) {
+                prompt.append("- ").append(url).append("\n");
+            }
+        } else {
+            prompt.append("No URLs found.\n");
+        }
+        prompt.append("\n");
+
+        if (embedding != null && embedding.length >= 774) {
+            int embeddingSize = embedding.length - 6;
+            float containsUrl = embedding[embeddingSize];
+            float containsIpUrl = embedding[embeddingSize + 1];
+            float containsNonAscii = embedding[embeddingSize + 2];
+            float containsSpamWords = embedding[embeddingSize + 3];
+
+            prompt.append("TECHNICAL FEATURES:\n");
+            prompt.append("- URLs: ").append(containsUrl > 0.5 ? "Yes" : "No").append("\n");
+            prompt.append("- IP URLs: ").append(containsIpUrl > 0.5 ? "Yes" : "No").append("\n");
+            prompt.append("- Non-ASCII URLs: ").append(containsNonAscii > 0.5 ? "Yes" : "No").append("\n");
+            prompt.append("- Spam words: ").append(containsSpamWords > 0.5 ? "Yes" : "No").append("\n\n");
+        }
+
+        prompt.append("REQUEST:\n");
+        prompt.append("Respond with ONLY ONE WORD - either 'PHISHING' or 'LEGITIMATE' - based on your analysis.");
+
+        return prompt.toString();
     }
 }
