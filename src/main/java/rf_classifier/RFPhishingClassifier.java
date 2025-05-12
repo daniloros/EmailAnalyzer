@@ -153,16 +153,27 @@ public class RFPhishingClassifier {
         eval.evaluateModel(classifier, dataset);
 
         // Print the results
-        System.out.println("=== Validation results ===");
-        System.out.println(eval.toSummaryString());
-        System.out.println("\n=== Confusion matrix===");
-        System.out.println(eval.toMatrixString());
+        double tp =0, fp=0, tn=0, fn=0;
+        tp= eval.truePositiveRate(1);
+        fp = eval.falsePositiveRate(1);
+        tn = eval.trueNegativeRate(1);
+        fn = eval.falseNegativeRate(1);
 
-        System.out.println("\n=== Metriche Dettagliate ===");
-        System.out.println("F-Measure: " + eval.weightedFMeasure());
-        System.out.println("ROC Area: " + eval.weightedAreaUnderROC());
-        System.out.println("Precision: " + eval.weightedPrecision());
-        System.out.println("Recall: " + eval.weightedRecall());
+        System.out.println("True Positives RF: " + eval.numTruePositives(1));
+        System.out.println("False Positives RF: " + eval.numFalsePositives(1));
+        System.out.println("True Negatives RF: " + eval.numTrueNegatives(1));
+        System.out.println("False Negatives RF: " + eval.numFalseNegatives(1));
+
+        double accuracy = (double)(tp + tn) / (tp + fp + tn + fn);
+        double precision = tp == 0 ? 0 : (double)tp / (tp + fp);
+        double recall = tp == 0 ? 0 : (double)tp / (tp + fn);
+        double f1 = precision + recall == 0 ? 0 : 2 * precision * recall / (precision + recall);
+
+        System.out.println("=== Validation results ===");
+        System.out.println("Accuracy: " + accuracy);
+        System.out.println("Precision: " + precision);
+        System.out.println("Recall: " + recall);
+        System.out.println("F1 Score: " + f1);
     }
 
     /**
